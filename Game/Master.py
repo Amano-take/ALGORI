@@ -115,7 +115,6 @@ class Master:
 
     def get_card_from_deck(self, n=1):
         indices = np.random.choice(len(self.deck), n, replace=False)
-        indices.sort()
         ans = self.deck[indices]
         self.deck = np.delete(self.deck, indices)
         return ans
