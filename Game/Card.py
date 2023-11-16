@@ -3,15 +3,14 @@ import time
 
 class Card():
     """
-    赤、黄、緑、青 * 13(0, 1, ..9, +2, skip, reverse) + wild * 2(+4, all)
+    赤、黄、緑、青 * 13(0, 1, ..9, +2, skip, reverse) + wild * 2(+4, all) + Empty
     
     """
     VARIATION = 54
     def __init__(self, number) -> None:
-        self.card = np.zeros(54)
+        self.card = np.zeros(Card.VARIATION+1)
         self.card[number] = 1
         self.num = number
-
 
     @classmethod
     def _from_str(cls, color:str, var:str):
@@ -38,6 +37,8 @@ class Card():
         return cls(number)
         
     def __str__(self):
+        if self.num == Card.VARIATION:
+            return "empty"
         colors = ["red", "yellow", "green", "blue", "wild"]
         color = self.num // 13
         var = self.num - color * 13
@@ -55,7 +56,7 @@ class Card():
         return c + ":" + v
 
     def getnumber(self):
-        return self.num
+        return int(self.num)
 
 class Test():
     def __init__(self) -> None:
@@ -63,3 +64,5 @@ class Test():
             card = Card(i)
             print(card)
 
+if __name__ == "__main__":
+    Test()
