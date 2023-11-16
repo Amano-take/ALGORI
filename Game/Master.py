@@ -9,9 +9,11 @@ class Master:
 
     def __init__(self) -> None:
         logging.basicConfig(level=logging.WARN, format="%(message)s")
+        self.num2Card = np.frompyfunc(lambda x: Card(x), 1, 1)
+    
+    def set_and_game(self):
         self.players = [Player() for _ in range(Master.player_num)]
         self.init_turn()
-        self.num2Card = np.frompyfunc(lambda x: Card(x), 1, 1)
         self.deck = self.init_deck()
         self.desk, self.desk_color = 54, None
         self.trash = []
@@ -36,7 +38,7 @@ class Master:
 
     def game_start(self):
         while not self.is_game_finished():
-            self.show_player_cards(self.turn)
+            #self.show_player_cards(self.turn)
             action, color = self.give_turn(self.turn, self.desk, self.desk_color)
             if action >= 0:
                 
@@ -52,12 +54,12 @@ class Master:
                     self.next_turn()
                     self.give_cards(self.turn, 2)
                     logging.debug("player"+ str(self.turn)+ " get 2 cards")
-                    self.show_player_cards(self.turn)
+                    #self.show_player_cards(self.turn)
                 elif action == 52:
                     self.next_turn()
                     self.give_cards(self.turn, 4)
                     logging.debug("player"+str(self.turn)+ " get 4 cards")
-                    self.show_player_cards(self.turn)
+                    # self.show_player_cards(self.turn)
                 #配ろうとしたのちにtrashに加える.
                 self.trash.append(action)
             else:
@@ -144,12 +146,14 @@ class Test:
         np.random.seed(0)
         start = time.time()
         np.random.seed(0)
+        m = Master()
         for i in range(1000):
-            m = Master()
+            m.set_and_game()
         end = time.time()
         print(end - start)
     
     def testonece():
         m = Master()
+        m.set_and_game()
 if __name__ == "__main__":
     Test()
