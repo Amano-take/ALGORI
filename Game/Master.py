@@ -142,6 +142,7 @@ class Master:
 class Test:
     def __init__(self) -> None:
         start = time.time()
+        np.random.seed(0)
         for i in range(1000):
             m = Master()
         end = time.time()
