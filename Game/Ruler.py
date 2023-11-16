@@ -43,6 +43,14 @@ class Ruler():
             return self.canSubmitColorArray[color]
         return self.canSubmitArray[c1.getnumber()]
     
+    def canSubmit_byint(self, c1:int, color=None) -> np.ndarray:
+        colors = ["red", "yellow", "green", "blue"]
+        if isinstance(color, str):
+            return self.canSubmitColorArray[colors.index(color)]
+        elif isinstance(color, int):
+            return self.canSubmitColorArray[color]
+        else:
+            return self.canSubmitArray[c1]
 
 
     

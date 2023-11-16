@@ -8,23 +8,24 @@ class Player:
     def __init__(self) -> None:
         self.Cards = np.repeat(0, 54).astype(dtype=np.int8)
         self.num_cards = 0
+        self.get_num = np.frompyfunc(Card.getnumber, 1, 1)
         
 
     def get_card(self, c:np.ndarray[Card]):
         self.num_cards += len(c)
-        get_num = np.frompyfunc(Card.getnumber, 1, 1)
-        cards = get_num(c).astype(np.int8)
+        
+        cards = self.get_num(c).astype(np.int8)
         for i in cards:
             self.Cards[i] += 1
 
-    def get_turn(self, c:Card, color):
+    def get_turn(self, c:int, color):
         if color is None:
-            cs  = (Player.rule.canSubmit(c) * self.Cards).astype(np.int8)
+            cs  = (Player.rule.canSubmit_byint(c) * self.Cards).astype(np.int8)
         else:
-            cs = (Player.rule.canSubmit(c, color) * self.Cards).astype(np.int8)
+            cs = (Player.rule.canSubmit_byint(c, color) * self.Cards).astype(np.int8)
         #pass
         if sum(cs) == 0:
-            return 0, None
+            return -1, None
         
         #submit
         i = np.argmax(cs)
@@ -34,11 +35,11 @@ class Player:
         if i >= 52:
             c = np.random.randint(4)
             logging.info(Player.colors[c])
-            return Card(i), c
+            return i, c
         
         if self.number_of_cards() == 1:
             logging.info("UNO!!")
-        return Card(i), None
+        return i, None
         
     def show_my_cards(self):
         ans = []
