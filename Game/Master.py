@@ -11,9 +11,9 @@ class Master:
         logging.basicConfig(level=logging.WARN, format="%(message)s")
         self.players = [Player() for _ in range(Master.player_num)]
         self.init_turn()
+        self.num2Card = np.frompyfunc(lambda x: Card(x), 1, 1)
         self.deck = self.init_deck()
-        self.desk = Card(54)
-        self.desk_color = None
+        self.desk, self.desk_color = 54, None
         self.trash = []
         for i in range(Master.player_num):
             self.give_cards(i, 7)
@@ -28,7 +28,7 @@ class Master:
             return cs
         except:
             #山札が足りなくなったら、
-            self.deck = np.hstack((self.deck, np.array(self.trash)))
+            self.deck = np.hstack((self.deck, self.num2Card(self.trash)))
             self.trash = []
             cs = self.get_card_from_deck(num)
             self.players[pid].get_card(cs)
@@ -38,22 +38,22 @@ class Master:
         while not self.is_game_finished():
             self.show_player_cards(self.turn)
             action, color = self.give_turn(self.turn, self.desk, self.desk_color)
-            if isinstance(action, Card):
+            if action >= 0:
                 
-                logging.debug("player"+ str(self.turn)+ ": submit "+str(action)+ " to "+ str(self.desk))
+                logging.debug("player"+ str(self.turn)+ ": submit "+str(Card(action))+ " to "+ str(Card(self.desk)))
                 self.desk = action
                 #actionがワイルドカードの時
-                if action.getnumber() <= 51:
+                if action <= 51:
                     self.desk_color = None
                 else:
                     self.desk_color = color
 
-                if action.getnumber() in [10, 23, 36, 49]:
+                if action in [10, 23, 36, 49]:
                     self.next_turn()
                     self.give_cards(self.turn, 2)
                     logging.debug("player"+ str(self.turn)+ " get 2 cards")
                     self.show_player_cards(self.turn)
-                elif action.getnumber() == 52:
+                elif action == 52:
                     self.next_turn()
                     self.give_cards(self.turn, 4)
                     logging.debug("player"+str(self.turn)+ " get 4 cards")
@@ -81,7 +81,7 @@ class Master:
             ans.append(str(c))
         return str(ans)
 
-    def give_turn(self, pid:int, c:Card, color:int):
+    def give_turn(self, pid:int, c:int, color:int):
         return self.players[pid].get_turn(c, color)
 
     def is_game_finished(self):
@@ -141,6 +141,7 @@ class Master:
 
 class Test:
     def __init__(self) -> None:
+        np.random.seed(0)
         start = time.time()
         for i in range(1000):
             m = Master()
