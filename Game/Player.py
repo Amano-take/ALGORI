@@ -17,6 +17,11 @@ class Player:
         cards = self.get_num(c).astype(np.int8)
         for i in cards:
             self.Cards[i] += 1
+    
+    def get_intcard(self, n:np.ndarray[int]):
+        self.num_cards += len(n)
+
+        self.Cards += n
 
     def get_turn(self, c:int, color):
         if color is None:
@@ -28,7 +33,7 @@ class Player:
             return -1, None
         
         #submit
-        i = np.argmax(cs)
+        i = np.where(cs > 0)[0][0]
         self.Cards[i] -= 1
         self.num_cards -= 1
         #wildカードで色の宣言
@@ -57,6 +62,12 @@ class Player:
 
     def number_of_cards(self):
         return self.num_cards
+    
+    def my_score(self):
+        if self.num_cards == 0:
+            return 0
+        else:
+            return np.sum(self.Cards * Player.rule.getscore())
 
 class Test:
     def __init__(self) -> None:

@@ -32,6 +32,18 @@ class Ruler():
                 elif c1 == c2c:
                     self.canSubmitColorArray[c1][c2] = 1
 
+        self.score = np.zeros(Card.VARIATION)
+        for i in range(Card.VARIATION):
+            c = i // 13
+            v = i % 13
+            #wild
+            if c == 4:
+                self.score[i] = 50
+            elif v < 10:
+                self.score[i] = v
+            else:
+                self.score[i] = 20
+
     def canSubmit(self, c1: Card, color=None) -> np.ndarray:
         """
         c1: 場カード
@@ -52,16 +64,14 @@ class Ruler():
         else:
             return self.canSubmitArray[c1]
 
-
+    def getscore(self) -> np.ndarray[int]:
+        return self.score
     
 class Test():
     def __init__(self, c:Card) -> None:
         print(c)
         r = Ruler()
-        ar = r.canSubmit(c)
-        for i in range(len(ar)):
-            if ar[i]:
-                print(Card(i))
+        print(r.score)
 
 if __name__ == "__main__":
     Test(Card(0))
