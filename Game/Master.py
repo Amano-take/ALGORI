@@ -115,6 +115,9 @@ class Master:
         for c in self.trash:
             ans.append(str(c))
         return str(ans)
+    
+    def get_trash(self):
+        return self.trash
 
     def give_turn(self, pid:int, c:int, color:int):
         return self.players[pid].get_turn(c, color)

@@ -23,7 +23,7 @@ class Player:
 
         self.Cards += n
 
-    def get_turn(self, c:int, color):
+    def get_turn(self, c:int, color, trash=None):
         if color is None:
             cs  = (Player.rule.canSubmit_byint(c) * self.Cards).astype(np.int8)
         else:
@@ -53,11 +53,11 @@ class Player:
                 t = Card(c)
                 ans.append(t.__str__())
         return ans
+    
     def show_cards(self, cs:np.ndarray[Card]):
         ans = []
-        for c, i in enumerate(cs):
-            for _ in range(i):
-                ans.append(Card(c).__str__())
+        for c in enumerate(cs):
+            ans.append(c.__str__())
         return ans
 
     def number_of_cards(self):
