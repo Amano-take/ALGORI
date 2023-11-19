@@ -32,7 +32,7 @@ class Ruler():
                 elif c1 == c2c:
                     self.canSubmitColorArray[c1][c2] = 1
 
-        self.score = np.zeros(Card.VARIATION)
+        self.score = np.zeros(Card.VARIATION, dtype=np.int16)
         for i in range(Card.VARIATION):
             c = i // 13
             v = i % 13

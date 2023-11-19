@@ -9,21 +9,22 @@ class Player:
         self.Cards = np.repeat(0, 54).astype(dtype=np.int8)
         self.num_cards = 0
         self.get_num = np.frompyfunc(Card.getnumber, 1, 1)
+        self.logging = logging.getLogger("mcs")
         
 
-    def get_card(self, c:np.ndarray[Card]):
+    def get_card(self, c:np.ndarray[int]):
         self.num_cards += len(c)
-        
-        cards = self.get_num(c).astype(np.int8)
-        for i in cards:
+        for i in c:
             self.Cards[i] += 1
     
     def get_intcard(self, n:np.ndarray[int]):
         self.num_cards += len(n)
+        tt = np.zeros(Card.VARIATION, dtype=np.int8)
+        for i in n:
+            tt[i] += 1
+        self.Cards += tt
 
-        self.Cards += n
-
-    def get_turn(self, c:int, color, trash=None):
+    def get_turn(self, c:int, color, trash=None, turn_plus = 1):
         if color is None:
             cs  = (Player.rule.canSubmit_byint(c) * self.Cards).astype(np.int8)
         else:
@@ -39,11 +40,11 @@ class Player:
         #wildカードで色の宣言
         if i >= 52:
             c = np.random.randint(4)
-            logging.info(Player.colors[c])
+            self.logging.info(Player.colors[c])
             return i, c
         
         if self.number_of_cards() == 1:
-            logging.info("UNO!!")
+            self.logging.info("UNO!!")
         return i, None
         
     def show_my_cards(self):
