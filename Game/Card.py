@@ -3,10 +3,13 @@ import time
 
 class Card():
     """
-    赤、黄、緑、青 * 13(0, 1, ..9, +2, skip, reverse) + wild * 2(+4, all) + Empty
-    
+    赤、黄、緑、青 * 13(0, 1, ..9, +2, skip, reverse) + wild * 2(+4, all) + shuffle + skipbind2 + Empty
+    v: 0, 1, .. 9 = 0, 1, ..9
+    v: 10: +2 11: skip 12: reverse
+    v: 0: +4, 1:all, 2:shuffle, 3:skipbind2
+    white = wild 色とする
     """
-    VARIATION = 54
+    VARIATION = 56
     def __init__(self, number) -> None:
         self.card = np.zeros(Card.VARIATION+1)
         self.card[number] = 1
@@ -32,8 +35,12 @@ class Card():
             number += 11
         elif var == "reverse":
             number += 12
-        elif var != "+4":
-            number += int(var)
+        elif var == "+4":
+            pass
+        elif var == "skipbind2":
+            number += 3
+        elif var == "shuffle":
+            number += 2
         return cls(number)
         
     def __str__(self):
@@ -48,8 +55,12 @@ class Card():
         elif color == 4:
             if var == 0:
                 v = "+4"
-            else:
+            elif var == 1:
                 v = "all"
+            elif var == 2:
+                v = "shuffle"
+            else:
+                v = "skipbind2"
         else:
             vars = ["+2", "skip", "reverse"]
             v = vars[var - 10]
@@ -82,7 +93,7 @@ class Card():
 
 class Test():
     def __init__(self) -> None:
-        for i in range(54):
+        for i in range(56):
             card = Card(i)
             print(card)
 

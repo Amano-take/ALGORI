@@ -6,10 +6,10 @@ class Player:
     rule = Ruler()
     colors = ["red", "yellow", "green", "blue"]
     def __init__(self) -> None:
-        self.Cards = np.repeat(0, 54).astype(dtype=np.int8)
+        self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
         self.get_num = np.frompyfunc(Card.getnumber, 1, 1)
-        self.logging = logging.getLogger("mcs")
+        self.logging = logging.getLogger("ex")
         
 
     def get_card(self, c:np.ndarray[int]):
@@ -17,12 +17,19 @@ class Player:
         for i in c:
             self.Cards[i] += 1
     
+    #何のためにあるのだろうか？
     def get_intcard(self, n:np.ndarray[int]):
         self.num_cards += len(n)
         tt = np.zeros(Card.VARIATION, dtype=np.int8)
         for i in n:
             tt[i] += 1
         self.Cards += tt
+
+    def give_all_my_cards(self):
+        self.num_cards = 0
+        ans = self.Cards.copy()
+        self.Cards -= self.Cards
+        return ans
 
     def get_turn(self, c:int, color, trash=None, turn_plus = 1):
         if color is None:
