@@ -5,7 +5,7 @@ class Ruler():
     def __init__(self) -> None:
         #場のカードc1に対してc2が出せるなら1, 出せないなら0
         #c1c=4に対しては全て出せるようになっている
-        self.canSubmitArray = np.zeros((Card.VARIATION+1, Card.VARIATION))
+        self.canSubmitArray = np.zeros((Card.VARIATION+1, Card.VARIATION), dtype=np.int8)
         for c1 in range(Card.VARIATION+1):
             c1c = c1 // 13
             c1v = c1 - c1c * 13
@@ -24,7 +24,7 @@ class Ruler():
 
             
 
-        self.canSubmitColorArray = np.zeros((4, Card.VARIATION))
+        self.canSubmitColorArray = np.zeros((4, Card.VARIATION), dtype=np.int8)
         for c1 in range(4):
             for c2 in range(Card.VARIATION):
                 c2c = c2 // 13

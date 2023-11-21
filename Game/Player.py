@@ -34,11 +34,11 @@ class Player:
 
     def get_turn(self, c:int, color, trash=None, turn_plus = 1):
         if color is None:
-            cs  = (Player.rule.canSubmit_byint(c) * self.Cards).astype(np.int8)
+            cs  = (Player.rule.canSubmit_byint(c) * self.Cards)
         else:
-            cs = (Player.rule.canSubmit_byint(c, color) * self.Cards).astype(np.int8)
+            cs = (Player.rule.canSubmit_byint(c, color) * self.Cards)
         #pass
-        if sum(cs) == 0:
+        if np.all(cs==0):
             return -1, None
         
         #submit
@@ -78,7 +78,7 @@ class Player:
         else:
             return np.sum(self.Cards * Player.rule.getscore())
 
-
+#なぜか遅くなる始末
 class NewPlayer(Player):
     def __init__(self) -> None:
         self.Cards = np.zeros(0, dtype=np.int8)
