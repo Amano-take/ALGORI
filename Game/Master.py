@@ -33,7 +33,7 @@ class Master:
         self.trash=trash.copy()
         self.turn_plus = reverse
         self.player_rest = player_rest
-
+        self.desk_color = color
         #playerにカードを渡す。
         self.players[0].Cards = my_deck.copy()
         self.players[0].num_cards = len(my_deck)
