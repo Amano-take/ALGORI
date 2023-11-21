@@ -23,43 +23,25 @@ class Master:
         self.num2Card = np.frompyfunc(lambda x: Card(x), 1, 1)
 
     #自分を０として本来の順序順に1, 2, 3
-    def set_board(self, deck:np.ndarray[Card], turn:int, reverse:int, my_deck:np.ndarray[int], other_decks:np.ndarray[np.ndarray[int]], trash:list, action, color, desk) -> np.ndarray[np.int16]:
+    def set_board(self, deck:np.ndarray[Card], turn:int, reverse:int, my_deck:np.ndarray[int], other_decks:np.ndarray[np.ndarray[int]], trash:list, action, color, desk, player_rest) -> np.ndarray[np.int16]:
+        #モンテカルロなのでplayerはランダムプレイ
         self.players = [Player() for _ in range(Master.player_num)]
+
         self.turn = 0
         self.desk = desk
         self.deck = deck.copy()
+        self.trash=trash.copy()
         self.turn_plus = reverse
+        self.player_rest = player_rest
+
+        #playerにカードを渡す。
         self.players[0].Cards = my_deck.copy()
         self.players[0].num_cards = len(my_deck)
         for i in range(1, 4):
-            self.players[i].get_intcard(other_decks[i-1])
-        self.trash=trash.copy()
-        self.logging.debug("player"+ str(self.turn)+ ": submit "+str(Card(action))+ " to "+ str(Card(self.desk)))
-        self.desk = action
-        #actionがワイルドカードの時
-        if action <= 51:
-            self.desk_color = None
-        else:
-            self.desk_color = color
-
-        if action in Master.card_plus_two:
-            self.next_turn()
-            self.give_cards(self.turn, 2)
-            self.logging.debug("player"+ str(self.turn)+ " get 2 cards")
-            #self.show_player_cards(self.turn)
-        elif action in Master.card_skip:
-            self.next_turn()
-            self.logging.debug("player"+str(self.turn)+" is skipped")
-        elif action in Master.card_reverse:
-            self.reverse_turn()
-            self.logging.debug("turn reversed")
-        elif action in Master.card_plus_four:
-            self.next_turn()
-            self.give_cards(self.turn, 4)
-            self.logging.debug("player"+str(self.turn)+ " get 4 cards")
-            # self.show_player_cards(self.turn)
-        #配ろうとしたのちにtrashに加える.
-        self.trash.append(action)
+            self.players[i].get_card(other_decks[i-1])
+        
+        #actionの処理を行って、次の人に回してからシミュレーションスタート
+        self.deal_action_color(action, color)
         self.next_turn()
         return self.game_start()
     
@@ -76,8 +58,6 @@ class Master:
         self.logging.debug("start game")
         self.game_start()
 
-    
-
     def game_start(self):
         show_flag = self.level <= logging.DEBUG
         while not self.is_game_finished():
@@ -89,6 +69,7 @@ class Master:
             #rest確認後、ターンを渡す
             if self.player_rest[self.turn] == 0:
                 action, color = self.give_turn(self.turn, self.desk, self.desk_color)
+            #パスを強制しrestを一つ減らす。
             else:
                 self.player_rest[self.turn] -= 1
                 self.logging.debug("player" + str(self.turn) + " is binded so skip this turn. reminer is " + str(self.player_rest[self.turn]))
@@ -97,45 +78,7 @@ class Master:
 
             #カードが出る場合
             if action >= 0:
-                self.logging.debug("player"+ str(self.turn)+ ": submit "+str(Card(action))+ " to "+ str(Card(self.desk)))
-                self.desk = action
-                #actionがワイルドカードでない場合
-                if action <= 51:
-                    self.desk_color = action // 13
-                #skipbind2の場合色を引き継ぐ
-                elif action == 55:
-                    self.desk_color = self.desk_color
-                #その他wildカラーの場合、playerの宣言色に染まる
-                else:
-                    self.desk_color = color
-
-                #deskcolor以外の処理
-                if action in Master.card_plus_two:
-                    self.next_turn()
-                    self.give_cards(self.turn, 2)
-                    self.logging.debug("player"+ str(self.turn)+ " get 2 cards")
-                    #self.show_player_cards(self.turn)
-                elif action in Master.card_skip:
-                    self.next_turn()
-                    self.logging.debug("player"+str(self.turn)+" is skipped")
-                elif action in Master.card_reverse:
-                    self.reverse_turn()
-                    self.logging.debug("turn reversed")
-                elif action in Master.card_plus_four:
-                    self.next_turn()
-                    self.give_cards(self.turn, 4)
-                    self.logging.debug("player"+str(self.turn)+ " get 4 cards")
-                    # self.show_player_cards(self.turn)
-                elif action in Master.card_shuffle:
-                    self.shuffle()
-                    if show_flag:
-                        self.show_all_players_cards()
-                elif action in Master.card_skipbind2:
-                    self.next_turn()
-                    self.player_rest[(self.turn + 1) % 4] += 2
-                    self.logging.debug("player"+str(self.turn)+" is skipped and player" + str((self.turn + 1) % 4) + " is binded for 2")
-                #配ろうとしたのちにtrashに加える.
-                self.trash.append(action)
+                self.deal_action_color(action, color, show_flag)
             #出ない場合
             else:
                 self.logging.debug("player"+str(self.turn)+ ": pass")
@@ -149,6 +92,47 @@ class Master:
         self.logging.debug("final score is: "+ str(scores))
         return scores
     
+    def deal_action_color(self, action, color, show_flag=False):
+        self.logging.debug("player"+ str(self.turn)+ ": submit "+str(Card(action))+ " to "+ str(Card(self.desk)))
+        self.desk = action
+        #actionがワイルドカードでない場合
+        if action <= 51:
+            self.desk_color = action // 13
+        #skipbind2の場合色を引き継ぐ
+        elif action == 55:
+            self.desk_color = self.desk_color
+        #その他wildカラーの場合、playerの宣言色に染まる
+        else:
+            self.desk_color = color
+
+        #deskcolor以外の処理
+        if action in Master.card_plus_two:
+            self.next_turn()
+            self.give_cards(self.turn, 2)
+            self.logging.debug("player"+ str(self.turn)+ " get 2 cards")
+            #self.show_player_cards(self.turn)
+        elif action in Master.card_skip:
+            self.next_turn()
+            self.logging.debug("player"+str(self.turn)+" is skipped")
+        elif action in Master.card_reverse:
+            self.reverse_turn()
+            self.logging.debug("turn reversed")
+        elif action in Master.card_plus_four:
+            self.next_turn()
+            self.give_cards(self.turn, 4)
+            self.logging.debug("player"+str(self.turn)+ " get 4 cards")
+            # self.show_player_cards(self.turn)
+        elif action in Master.card_shuffle:
+            self.shuffle()
+            if show_flag:
+                self.show_all_players_cards()
+        elif action in Master.card_skipbind2:
+            self.next_turn()
+            self.player_rest[(self.turn + 1) % 4] += 2
+            self.logging.debug("player"+str(self.turn)+" is skipped and player" + str((self.turn + 1) % 4) + " is binded for 2")
+        #配ろうとしたのちにtrashに加える.
+        self.trash.append(action)
+
     #カード関係
     def give_cards(self, pid:int, num=1):
         """
@@ -190,7 +174,7 @@ class Master:
         """
         self.turn + 1の人から配り始める
         """
-        print("-------------------------------------------")
+        self.logging.debug("-------------------------------------------")
         all_card = self.get_cards_of_all_player()
         np.random.shuffle(all_card)
         basis = len(all_card) // 4
@@ -290,7 +274,7 @@ class Master:
     def init_deck(self) -> np.ndarray[int]:
         #self.deck : np.ndarray[int]
         #ランダムシャフルする
-        cards = np.zeros(Card.VARIATION * 2, dtype=Card)
+        cards = np.zeros(Card.VARIATION * 2, dtype=np.int8)
         index = 0
         for i in range(Card.VARIATION):
             c = i // 13
@@ -348,5 +332,5 @@ class Test:
         print(end - start)
 
 if __name__ == "__main__":
-    #Test.test()
-    Test.testonece()
+    Test.test()
+    #Test.testonece()

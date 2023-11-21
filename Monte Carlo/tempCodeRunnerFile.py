@@ -1,1 +1,1 @@
-print(sys.path)
+print

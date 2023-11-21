@@ -24,9 +24,10 @@ class PlayerMonteCarlo(Player):
     def from_score_get_score(self, scores):
         return scores[0] - max(scores[1:])
 
-    def simulate(self, other_player_cards_num, reverse, trash, action, color, desk):
+    def simulate(self, other_player_cards_num, reverse, trash, action, color, desk, player_rest):
         """
-        deck := [ 0, 0, 0, 1, ...]
+
+        myCards := [ 0, 0, 0, 1, ...]
         other_player_Cards := [[12, 23, 10, ...], ...]
         に注意
         """
@@ -36,12 +37,12 @@ class PlayerMonteCarlo(Player):
         for i in range(sim_n):
             #self.l.setLevel(logging.WARN)
             other_player_cards, deck = self.random_likelihood(trash, other_player_cards_num)
-            score_sum += self.master.set_board(deck, 0, reverse, self.Cards, other_player_cards, trash, action, color, desk) / sim_n
+            score_sum += self.master.set_board(deck, 0, reverse, self.Cards, other_player_cards, trash, action, color, desk, player_rest) / sim_n
             #self.l.setLevel(logging.WARN)
         
         return self.from_score_get_score(score_sum)
     
-    def get_turn(self, desk_c:int, desk_color:int, trash:list[np.ndarray[int]], other_player_cards_num:list[int], reverse:int):
+    def get_turn(self, desk_c:int, desk_color:int, trash:list[np.ndarray[int]], other_player_cards_num:list[int], reverse:int, player_rest:list[int]):
         """
         return カード番号, color: None|(0, 1, 2, 3)
         """
@@ -62,12 +63,12 @@ class PlayerMonteCarlo(Player):
         for i in canSub:
             self.Cards[i] -= 1
             self.num_cards -= 1
-            if i >= 52:
+            if i >= 52 and i != 55:
                 for color in range(4):
-                    action_score[(i, color)] = self.simulate(other_player_cards_num, reverse, trash, i, color, desk_c)
+                    action_score[(i, color)] = self.simulate(other_player_cards_num, reverse, trash, i, color, desk_c, player_rest)
             else:
                 color = None
-                action_score[(i, None)] = self.simulate(other_player_cards_num, reverse, trash, i, color, desk_c)
+                action_score[(i, None)] = self.simulate(other_player_cards_num, reverse, trash, i, color, desk_c, player_rest)
             self.Cards[i] += 1
             self.num_cards += 1
         
@@ -81,22 +82,11 @@ class PlayerMonteCarlo(Player):
             self.l.info(Player.colors[c]) 
         return a, c
 
-        #wildカードで色の宣言
-        if i >= 52:
-            c = np.random.randint(4)
-            logging.info(Player.colors[c])
-            return i, c
-        
-        if self.number_of_cards() == 1:
-            logging.info("UNO!!")
-        return i, None
-    
-
-
     def random_likelihood(self, trash, other_player_num_of_card:list[int]):
         """
         trash, 自分のカードを除いて、その中からランダムに抽出
         return [other1, other2, other3], deck
+        other1: deck型
         """
         utrash, tcount = np.unique(trash, return_counts=True)
         deckintrash = np.where(np.isin(self.uinideck, utrash))[0]
@@ -132,6 +122,7 @@ class TestMaster(Master):
         self.deck = self.init_deck()
         self.desk, self.desk_color = 54, None
         self.trash = []
+        self.player_rest = np.zeros(Master.player_num, dtype=np.int8)
         for i in range(Master.player_num):
             self.give_cards(i, 7)
         #self.show_all_players_cards()
@@ -149,7 +140,7 @@ class TestMaster(Master):
                 for i in range(3):
                     tmp.append(self.players[i].num_cards)
                 self.players[3].random_likelihood(self.trash, tmp)
-                action, color = self.players[3].get_turn(self.desk, self.desk_color, self.trash, tmp, self.turn_plus)
+                action, color = self.players[3].get_turn(self.desk, self.desk_color, self.trash, tmp, self.turn_plus, self.player_rest)
             else:
                 action, color = self.give_turn(self.turn, self.desk, self.desk_color, self.trash, self.turn_plus)
 
@@ -209,7 +200,7 @@ if __name__ == "__main__":
     try:
         for i in tqdm.tqdm(range(1000)):
             scores += tm.set_and_game()
-    except:
+    except KeyboardInterrupt as e:
         print(scores)
         exit()
     print(scores)

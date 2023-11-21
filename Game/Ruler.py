@@ -22,6 +22,8 @@ class Ruler():
                 elif c1 == Card.VARIATION:
                     self.canSubmitArray[c1][c2] = 1
 
+            
+
         self.canSubmitColorArray = np.zeros((4, Card.VARIATION))
         for c1 in range(4):
             for c2 in range(Card.VARIATION):
@@ -60,7 +62,12 @@ class Ruler():
         if isinstance(color, str):
             return self.canSubmitColorArray[colors.index(color)]
         elif isinstance(color, int):
-            return self.canSubmitColorArray[color]
+            #wildの場合は色に基づいて
+            if c1 >= 52:
+                return self.canSubmitColorArray[color]
+            #それ以外の場合はc1の種類に基づいて
+            else:
+                return self.canSubmitArray[c1]
         else:
             return self.canSubmitArray[c1]
 
