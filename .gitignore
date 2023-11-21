@@ -1,4 +1,4 @@
 /uno/
+*.pyc
 .prof
 /dev_kit/
-.pyc
