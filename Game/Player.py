@@ -14,9 +14,12 @@ class Player:
         
 
     def get_card(self, c:np.ndarray[int]):
-        self.num_cards += len(c)
-        for i in c:
-            self.Cards[i] += 1
+        if len(c) != Card.VARIATION:
+            self.num_cards += len(c)
+            for i in c:
+                self.Cards[i] += 1
+        else:
+            self.Cards += c
     
     #何のためにあるのだろうか？
     def get_intcard(self, n:np.ndarray[int]):

@@ -305,7 +305,6 @@ class Master:
                         index += 1
         np.random.shuffle(cards)
         return cards
-        
 
 class Test:
     def __init__(self) -> None:
