@@ -112,7 +112,7 @@ class ProbabilityModel:
         self.trash.append(card)
 
     def other_player_get_card(self, pid: int, my_card, card_num):
-        self.have_num_card[pid - 1] += card_num
+        
 
         # 改善の余地あり。相手の手札確率を考慮していない。
         utrash, ctrash = np.unique(self.trash, return_counts=True)
@@ -136,8 +136,9 @@ class ProbabilityModel:
                 temp[num : amount + 1] += (
                     self.plpb[pid - 1][i][: amount - num + 1] * prob
                 )
-            self.plpb[pid - 1][i] = temp / np.sum(temp)
 
+            self.plpb[pid - 1][i] = temp / np.sum(temp)
+            break
         # trashを用いて配るような場合
         if draw < card_num:
             restcount = np.zeros(Card.VARIATION, np.int8)
@@ -160,6 +161,9 @@ class ProbabilityModel:
                     )
                 self.plpb[pid - 1][i] = temp
 
+        self.have_num_card[pid - 1] += card_num
+
+        
     def trash_clean(self, my_card):
         self.trash = [self.trash[-1]]
         self.cardcount = np.zeros(Card.VARIATION, dtype=np.int8)
@@ -211,7 +215,7 @@ if __name__ == "__main__":
     my_card[[0, 15, 24, 25, 33, 40, 55]] += 1
     get_cards = np.array([55])
     PM.show(1, 1)
-    PM.other_player_get_card(1, my_card, 84)
+    PM.other_player_get_card(1, my_card, 83)
     PM.show(1, 1)
     cumsum = PM.get_player_cumsum()
     start = time.time()
