@@ -172,6 +172,9 @@ class ProbabilityModel:
         self.sum_cardcount = np.sum(my_card) + 1
         self.drawcount = np.repeat(0, repeats=3).astype(np.int8)
 
+    def shuffle(self):
+        #TODO:shuffleされたときの挙動を考えなくては
+        pass
     def other_player_pass(self, pid: int, desk: int, color: int):
         self.plpb[pid - 1][
             np.where(ProbabilityModel.rule.canSubmit_byint(desk, color) == 1)[0]
