@@ -342,9 +342,9 @@ if __name__ == "__main__":
     tm = PMMaster(ll)
     scores = np.zeros(4)
     try:
+        #FIXME なぜかスコアが良くない？？？
         for i in tqdm.tqdm(range(1000)):
             scores += tm.set_and_game()
         print(scores)
-    except Exception as e:
-        print(e)
+    except:
         print(scores)

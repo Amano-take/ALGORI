@@ -37,7 +37,7 @@ class PlayerMonteCarlo(Player):
         for i in range(sim_n):
             #self.l.setLevel(logging.WARN)
             other_player_cards, deck = self.random_likelihood(trash, other_player_cards_num)
-            score_sum += self.master.set_board(deck, 0, reverse, self.Cards, other_player_cards, trash, action, color, desk, player_rest) / sim_n
+            score_sum += self.master.set_board(deck,reverse, self.Cards, other_player_cards, trash, action, color, 0, player_rest) / sim_n
             #self.l.setLevel(logging.WARN)
         
         return self.from_score_get_score(score_sum)
@@ -198,9 +198,8 @@ if __name__ == "__main__":
     tm = TestMaster(ll)
     scores = np.zeros(4)
     try:
-        for i in tqdm.tqdm(range(100)):
+        for i in tqdm.tqdm(range(1000)):
             scores += tm.set_and_game()
     except KeyboardInterrupt as e:
         print(scores)
-        exit()
     print(scores)
