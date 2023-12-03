@@ -63,7 +63,7 @@ class Ruler():
             return self.canSubmitColorArray[colors.index(color)]
         elif isinstance(color, int):
             #wildの場合は色に基づいて
-            if c1 >= 52 and c1 != 55:
+            if c1 >= 52:
                 return self.canSubmitColorArray[color]
             #それ以外の場合はc1の種類に基づいて
             else:

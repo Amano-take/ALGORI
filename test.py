@@ -39,18 +39,6 @@ for _ in range(1000):
     b = np.array([0, 1, 2])
     for delete in b:
         a = np.delete(a, np.where(a==delete)[0])
-end = time.time()
-print(a)
-print(end - start)
-
-a = np.array([fint(i) for i in range(54)]).repeat(2)
-start = time.time()
-b = np.array([fint(0), fint(53)])
-ua, countsa = np.unique(a, return_counts=True)
-u, counts = np.unique(b, return_counts=True)
-print()
-cc = countsa.copy()
-cc[ainb] -= counts
-a = np.repeat(ua, cc)
-end = time.time()
-print(end - start)
+aa, ac= np.unique(np.array([6, 7, 4, 55, 52, 29, 34, 26, 33, 31, 34, 28, 35, 38, 38, 25, 16, 18, 14, 40, 40, 46, 46, 47, 8, 6, 32, 35, 30, 43, 48, 47, 51, 52, 42, 29, 33, 36, 23, 10, 23, 15, 14, 13, 17, 18, 5, 2, 0, 7, 4, 55, 53, 28, 31, 53, 8, 1, 5, 12, 11, 55, 53, 41, 45, 32, 19, 22, 20, 20, 25, 21, 24, 11, 9, 3, 52, 39, 48, 41, 42, 44, 51, 43, 45, 49, 10, 52, 24, 15, 2]), return_counts=True)
+print(aa)
+print(ac)

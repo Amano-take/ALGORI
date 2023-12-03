@@ -61,7 +61,7 @@ class RealPlayer(Player):
         pass
 
 class PMPlayer(Player):
-    simulate_num = 1
+    simulate_num = 300
 
     def __init__(self) -> None:
         super().__init__()
@@ -69,6 +69,8 @@ class PMPlayer(Player):
         logger = logging.getLogger("mcs")
         logger.setLevel(logging.WARN)
         self.simmaster = Master(logobject=logger)
+        self.arange = np.arange(Card.VARIATION, dtype=np.int8)
+        self.zeros = np.zeros(Card.VARIATION, dtype=np.int8)
 
     def join_room_callback(self, your_id):
         self.playername2_123 = ddict()
@@ -84,6 +86,8 @@ class PMPlayer(Player):
         pindex = self.playername2_123[pid]
         self.pm.player_submit_card(pindex, card)
 
+
+
     def other_draw_card(self, pid, nums):
         #first drawは無視
         if nums == 7:
@@ -91,18 +95,31 @@ class PMPlayer(Player):
         pindex = self.playername2_123[pid]
         #自分がドローした場合
         if pindex == 0:
-            return
-        self.pm.other_player_get_card(pindex, self.Cards, nums)
+            self.pm.i_get_card_num(nums, self.Cards)
+        else:
+            self.pm.other_player_get_card(pindex, self.Cards, nums)
     
     def receive_shuffle(self, pid, af_cards):
+        #通常のドローとは異なるように
         pindex = self.playername2_123[pid]
-        self.pm.shuffle(pindex, self.Cards, af_cards)
-        self.Cards -= self.Cards
-    
-    def get_card(self, c: np.ndarray[int]):
+        uaf, caf = np.unique(af_cards, return_counts=True)
+        zero = np.copy(self.zeros)
+        zero[uaf] += caf
 
-        super().get_card(c)
+        self.pm.shuffle(pindex, self.Cards, zero)
+        self.Cards -= self.Cards
+        self.Cards += zero
+        self.num_cards = len(af_cards)
+
+    def give_all_my_cards(self):
+        self.num_cards = 0
+        ans = self.Cards.copy()
+        return ans
+
+    def get_card(self, c: np.ndarray[int]):
+        
         self.pm.i_get_card(c)
+        super().get_card(c)
 
     def receive_other_pass(self, pid, desk, color):
         pindex = self.playername2_123[pid]
@@ -130,9 +147,8 @@ class PMPlayer(Player):
             else:
                 action_score[(card, None)] = self.simulate(turn_plus, card, None, cumsum, player_rest)
             self.Cards[card] += 1
-            self.num_cards += 1
-            break
-
+            self.num_cards += 1 
+        #print(action_score)
         return max(action_score, key=action_score.get)
     
     def simulate(self, turn_plus, card, color, cumsum, player_rest):
@@ -142,16 +158,14 @@ class PMPlayer(Player):
         #print(self.pm.trash)
         for _ in range(PMPlayer.simulate_num):
             others, deck, trash = self.pm.get_player_card(cumsum, rest)
-            self.logging.warning(str(others))
             scores += self.simmaster.set_board(deck, turn_plus, self.Cards, others, trash, card, color, 0, player_rest) / PMPlayer.simulate_num
         return self.scores2score(scores)
     
     def scores2score(self, scores):
-        return scores[0] - max(scores[1:])
+        return scores[0] - np.average(scores[1:])
 
     def get_turn(self, c: int, color, turn_plus, player_rest):
         cs = (Player.rule.canSubmit_byint(c, color) * self.Cards)
-        print(self.pm.have_num_card)
         if np.all(cs==0):
             return self.pass_turn()
         
@@ -160,7 +174,7 @@ class PMPlayer(Player):
         self.num_cards -= 1
         if self.number_of_cards() == 1:
             self.logging.info("UNO!!")
-        return i, c
+        return self.submit_card(i, c)
         
 class PMMaster(Master):
     def __init__(self, l: logging.Logger) -> None:
@@ -198,13 +212,14 @@ class PMMaster(Master):
     def game_start(self):
         show_flag = self.level >= logging.DEBUG
         while not self.is_game_finished():
+            colors = ["red", "yellow", "green", "blue", "white"]
+            if self.desk_color is not None:
+                self.logging.info("desk " + str(Card(self.desk)) + " color: " + str(colors[self.desk_color]))
             if show_flag:
                 self.show_player_cards(self.turn)
             if self.turn == 3:
-                tmp = []
-                for i in range(3):
-                    tmp.append(self.players[i].num_cards)
                 action, color = self.players[3].get_turn(self.desk, self.desk_color, self.turn_plus, self.player_rest)
+                
             else:
                 action, color = self.give_turn(self.turn, self.desk, self.desk_color, self.trash, self.turn_plus)
                 assert isinstance(self.players[3], PMPlayer)
@@ -212,7 +227,8 @@ class PMMaster(Master):
                     self.players[3].other_submit_card(self.playerid[self.turn], action , color)
                 else:
                     self.players[3].receive_other_pass(self.playerid[self.turn], self.desk, self.desk_color)
-
+            
+            
             #カードが出る場合
             if action >= 0:
                 self.deal_action_color(action, color, show_flag=True)
@@ -261,7 +277,6 @@ class PMMaster(Master):
             # self.show_player_cards(self.turn)
         elif action in Master.card_shuffle:
             self.shuffle()
-            assert isinstance(self.players[3], PMMaster)
             if show_flag:
                 self.show_all_players_cards()
         elif action in Master.card_skipbind2:
@@ -277,6 +292,30 @@ class PMMaster(Master):
     def show_player_cards(self, pid:int): 
         self.logging.debug("player" + str(self.playerid[pid]) + ": " + str(self.players[pid].show_my_cards()))
 
+    def shuffle(self):
+        """
+        self.turn + 1の人から配り始める
+        """
+        self.logging.debug("-------------------------------------------")
+        all_card = self.get_cards_of_all_player()
+        np.random.shuffle(all_card)
+        basis = len(all_card) // 4
+        rest = len(all_card) % 4
+        cardstuck = []
+        for i in range(rest):
+            if (self.turn+1+i)%4 == 3:
+                cardstuck.extend(all_card[i:i+1])
+            else:
+                self.players[(self.turn+1+i)%4].get_card(all_card[i:i+1])
+        for i in range(4):
+            if i == 3:
+                cardstuck.extend(all_card[rest+basis*i:rest+basis*(i+1)])
+            else:
+                self.players[i].get_card(all_card[rest+basis*i:rest+basis*(i+1)])
+        assert isinstance(self.players[3], PMPlayer)
+        self.players[3].receive_shuffle(self.playerid[self.turn], np.array(cardstuck))
+        return
+
     def give_cards(self, pid:int, num=1):
         """
         pidの人にnum枚挙げる
@@ -289,9 +328,10 @@ class PMMaster(Master):
             return cs
         except:
             #山札が足りなくなったら、
-            self.deck = np.hstack((self.deck, self.trash))
+            self.logging.debug("reload")
+            self.deck = np.hstack((self.deck, self.trash[:len(self.trash) - 1]))
             np.random.shuffle(self.deck)
-            self.trash = []
+            self.trash = [self.trash[-1]]
             cs = self.get_card_from_deck(num)
             self.players[pid].get_card(cs)
             return cs
@@ -299,13 +339,12 @@ class PMMaster(Master):
 if __name__ == "__main__":
     logging.basicConfig(format="%(message)s")
     ll = logging.getLogger("ex")
-    ll.setLevel(logging.DEBUG)
+    ll.setLevel(logging.WARN)
     tm = PMMaster(ll)
     scores = np.zeros(4)
     try:
-        for i in range(1):
+        for i in tqdm.tqdm(range(1000)):
             scores += tm.set_and_game()
-    except KeyboardInterrupt as e:
         print(scores)
-        exit()
-    print(scores)
+    except:
+        print(scores)
