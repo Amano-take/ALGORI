@@ -61,25 +61,28 @@ class ProbabilityModel:
         """
         self.cardcount[card] += 1
         self.sum_cardcount += 1
-        self.have_num_card[pid] -= 1
+        self.have_num_card[pid-1] -= 1
 
         for i in range(3):
             if i == pid - 1:
-                self.plpb[pid - 1][card][:4] = self.plpb[pid - 1][card][1:] / np.sum(
-                    self.plpb[pid - 1][card][1:]
-                )
+                try:
+                    self.plpb[pid - 1][card][:4] = self.plpb[pid - 1][card][1:] / np.sum(
+                        self.plpb[pid - 1][card][1:]
+                    )
+                except:
+                    print(self.plpb[pid - 1][card][1:])
             else:
-                self.card_open(card, i)
+                self.card_open(card, i+1)
         self.trash.append(card)
 
-    def i_get_card(self, Cards: np.ndarray[int]):
+    def i_get_card(self, Cards: np.ndarray[int], deck_num = Card.VARIATION * 2):
         for card in Cards:
             self.cardcount[card] += 1
             self.sum_cardcount += 1
             for i in range(3):
-                self.card_open(card, i + 1)
+                self.card_open(card, i + 1, deck_num)
 
-    def card_open(self, card, pid):
+    def card_open(self, card, pid, deck_num=Card.VARIATION * 2):
         """
         あるcardがopenになったときの計算をpidに対して行う。本来であれば、その他のカードを持っている確率は上昇するが、今回は行わない。
         #TODO また山札がresetされたときのことをまだ考えていない
@@ -87,13 +90,16 @@ class ProbabilityModel:
         card_num = self.num_card(card)
         r = self.cardcount[card]
         for j in range(0, card_num + 1):
+
+           
             # 分母の寄与
-            multiple1 = (Card.VARIATION * 2 - r + 1) / (card_num - r + 1)
+            multiple1 = (deck_num - r + 1) / (card_num - r + 1)
             # 分子の寄与
             multiple2 = (card_num - r - j + 1) / (
-                Card.VARIATION * 2 - self.drawcount[pid - 1] - self.sum_cardcount + 1
+                deck_num - self.drawcount[pid - 1] - self.sum_cardcount + 1
             )
             self.plpb[pid - 1][card][j] *= multiple1 * multiple2
+
 
         # print(np.sum(self.plpb[pid-1][card])) -> 1を確認だが念のため
         self.plpb[pid - 1][card] /= np.sum(self.plpb[pid - 1][card])
@@ -112,33 +118,34 @@ class ProbabilityModel:
         self.trash.append(card)
 
     def other_player_get_card(self, pid: int, my_card, card_num):
-        
-
         # 改善の余地あり。相手の手札確率を考慮していない。
         utrash, ctrash = np.unique(self.trash, return_counts=True)
-        deckintrash = np.where(np.isin(self.uinideck, utrash))[0]
         restcount = self.inideckcount.copy()
-        restcount[deckintrash] -= ctrash
+        restcount[utrash] -= ctrash
         restcount -= my_card
         # restcountはPlayer型
         num_rest_Card = np.sum(restcount) - np.sum(self.have_num_card)
         draw = min(num_rest_Card, card_num)
         # 山札からある分からdraw枚数だけdraw
-        for i in range(1, Card.VARIATION):
+        for i in range(0, Card.VARIATION):
             temp = np.zeros(5, dtype=np.float64)
-            amount = self.num_card(i)
+            amount = restcount[i]
             for num in range(0, min(draw, restcount[i]) + 1):
+
                 prob = (
                     math.comb(restcount[i], num)
                     * math.comb(num_rest_Card - restcount[i], draw - num)
                     / math.comb(num_rest_Card, draw)
                 )
-                temp[num : amount + 1] += (
-                    self.plpb[pid - 1][i][: amount - num + 1] * prob
-                )
+                try:
+                    temp[num : amount + 1] += (
+                        self.plpb[pid - 1][i][: amount - num + 1] * prob
+                    )
+                except:
+                    print(num, amount, self.trash, my_card, card_num)
 
             self.plpb[pid - 1][i] = temp / np.sum(temp)
-            break
+
         # trashを用いて配るような場合
         if draw < card_num:
             restcount = np.zeros(Card.VARIATION, np.int8)
@@ -172,9 +179,56 @@ class ProbabilityModel:
         self.sum_cardcount = np.sum(my_card) + 1
         self.drawcount = np.repeat(0, repeats=3).astype(np.int8)
 
-    def shuffle(self):
+    def shuffle(self, pid:int, pre_my_card, af_my_card):
         #TODO:shuffleされたときの挙動を考えなくては
-        pass
+        total = self._shuffle_num_card(pid, pre_my_card)
+        self._shuffle_average()
+
+        diff = af_my_card - pre_my_card
+        bef = np.where(diff < 0, -diff, 0)
+        self.cardcount -= bef
+        af = np.where(diff > 0, diff, 0)
+        stuck_af = np.repeat(self.arange, af)
+        self._shuffle_distribute_bef(self.have_num_card, bef)
+        #FIXME: 優先度低　shuffle後のカード確率校正
+        self.i_get_card(stuck_af, total)
+
+    def _shuffle_distribute_bef(self, draws, bef):
+        sum = np.sum(draws)
+        for card, amount in enumerate(bef):
+            limit = self.num_card(card) - self.cardcount[card]
+            for i in range(3):
+                temp = np.zeros(5, dtype=np.float64)
+                for num in range(0, amount+1):
+                    prob = (
+                        math.comb(draws[i], num)
+                        * math.comb(sum - draws[i], amount - num)
+                        / math.comb(sum, draws[i])
+                    )
+                    temp[num : limit + 1] += (
+                        self.plpb[i][card][: limit - num + 1] * prob
+                    )
+
+                self.plpb[i - 1][card] = temp / np.sum(temp)
+
+    def _shuffle_average(self):
+        average = np.sum(self.plpb, axis=0)
+        for i in range(3):
+            self.plpb[i] = np.copy(average)
+
+
+    def _shuffle_num_card(self, pid, pre_my_card):
+        mynum = np.sum(pre_my_card)
+        other_num = np.sum(self.have_num_card)
+        total = mynum + other_num
+        rest = total % 4
+        basic = total // 4
+        self.have_num_card = np.repeat(basic, 3).astype(np.int8)
+        for i in range(1, rest+1):
+            if (pid + i) % 4 >= 1:
+                self.have_num_card[((pid + i) % 4) - 1] += 1
+        return total
+        
     def other_player_pass(self, pid: int, desk: int, color: int):
         self.plpb[pid - 1][
             np.where(ProbabilityModel.rule.canSubmit_byint(desk, color) == 1)[0]
@@ -189,40 +243,64 @@ class ProbabilityModel:
     def get_player_card(self):
         return self.have_num_card
 
-    def get_player_card(self, num_card: list[int], cumsums):
+    def get_player_card(self, cumsums, rest):
         others = []
+        num_card = self.have_num_card
+        cumsumss = np.copy(cumsums)
         for i in range(3):
             ans = []
             t = 0
             while len(ans) < num_card[i]:
-                a = np.apply_along_axis(self.get_index(t), axis=1, arr=cumsums[i])
+                a = np.apply_along_axis(self.get_index(t), axis=1, arr=cumsumss[i])
                 cs = np.repeat(self.arange, a)
-                cumsums[i][cs] = np.array([1, 1, 1, 1, 1])
+                cumsumss[:, cs] = np.ones((3, len(cs), 5), dtype=np.int8)
                 ans.extend(cs)
                 t += 0.01
             cands = np.array(ans)
             np.random.shuffle(cands)
             others.append(ans[: num_card[i]])
-        return others
+        
+        return self.other_deck_trash(others, rest)
+    
+    def other_deck_trash(self, others, rest):
+        rest_ = np.copy(rest)
+        for other in others:
+            uo, co = np.unique(other, return_counts=True)
+            try:
+                rest_[uo] -= co
+            except:
+                print(others)
+        rest_deck = np.repeat(self.arange, rest_)
+        np.random.shuffle(rest_deck)
+        return others, rest_deck, self.trash
+    
+    def get_rest(self, my_cards, card):
+        rest = np.copy(self.inideckcount)
+        ut, ct = np.unique(self.trash, return_counts=True)
+        if len(ut) > 0:
+            rest[ut] -= ct
+        rest -= my_cards
+        rest[card] -= 1
+        return rest
 
     def get_index(self, t):
         def no_name(cumsum):
             return bisect.bisect_left(cumsum, random.uniform(t, 1))
-
         return no_name
 
 
 if __name__ == "__main__":
     PM = ProbabilityModel()
     my_card = np.zeros(Card.VARIATION, dtype=np.int8)
-    my_card[[0, 15, 24, 25, 33, 40, 55]] += 1
-    get_cards = np.array([55])
-    PM.show(1, 1)
-    PM.other_player_get_card(1, my_card, 83)
-    PM.show(1, 1)
+    my_card[[0, 15, 24, 33, 40, 55]] += 1
+    my_card[33] += 1
+    stuck_my = np.repeat(PM.arange, my_card)
+    PM.i_get_card(stuck_my)
+    #PM.player_submit_card(1, 15)
+    #print(PM.plpb[:, 15])
     cumsum = PM.get_player_cumsum()
-    start = time.time()
-    for i in range(1000):
-        PM.get_player_card([7, 7, 7], cumsum.copy())
-    end = time.time()
-    print(end - start)
+    rest = PM.get_rest(my_card, 17)
+    #print(cumsum[1, 1, :])
+    print(PM.get_player_card(cumsum, rest))
+    #print(cumsum[1, 1, :])
+    print(PM.get_player_card(cumsum, rest))

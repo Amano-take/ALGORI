@@ -198,7 +198,7 @@ if __name__ == "__main__":
     tm = TestMaster(ll)
     scores = np.zeros(4)
     try:
-        for i in tqdm.tqdm(range(1000)):
+        for i in tqdm.tqdm(range(100)):
             scores += tm.set_and_game()
     except KeyboardInterrupt as e:
         print(scores)

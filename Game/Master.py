@@ -4,7 +4,7 @@ import os, sys
 import numpy as np
 #ここどうすればいいんだろうか？
 sys.path.append('d:\\Study\\Programming\\ALGORI\\Game')
-from Player import Player
+from Player import Player, RandomPlayer
 from Card import Card
 import logging
 class Master:
@@ -23,10 +23,9 @@ class Master:
         self.num2Card = np.frompyfunc(lambda x: Card(x), 1, 1)
 
     #自分を０として本来の順序順に1, 2, 3
-    def set_board(self, deck:np.ndarray[Card], turn:int, reverse:int, my_deck:np.ndarray[int], other_decks:np.ndarray[np.ndarray[int]], trash:list, action, color, desk, player_rest) -> np.ndarray[np.int16]:
+    def set_board(self, deck:np.ndarray[Card], reverse:int, my_deck:np.ndarray[int], other_decks:np.ndarray[np.ndarray[int]], trash:list, action, color, desk, player_rest) -> np.ndarray[np.int16]:
         #モンテカルロなのでplayerはランダムプレイ
-        self.players = [Player() for _ in range(Master.player_num)]
-
+        self.players = [RandomPlayer() for _ in range(Master.player_num)]
         self.turn = 0
         self.desk = desk
         self.deck = deck.copy()
@@ -323,7 +322,7 @@ class Test:
         log = logging.getLogger("ex")
         log.setLevel(logging.WARN)
         m = Master(log)
-        """大体2.2秒"""
+        """大体2.2秒 -> 1.77秒"""
         for i in range(1000):
             m.set_and_game()
                 

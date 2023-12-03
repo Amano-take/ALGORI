@@ -43,13 +43,12 @@ end = time.time()
 print(a)
 print(end - start)
 
-a = np.array([fint(i) for i in range(54)])
+a = np.array([fint(i) for i in range(54)]).repeat(2)
 start = time.time()
 b = np.array([fint(0), fint(53)])
 ua, countsa = np.unique(a, return_counts=True)
 u, counts = np.unique(b, return_counts=True)
-ainb = np.where(np.isin(ua, b))[0]
-print(ainb)
+print()
 cc = countsa.copy()
 cc[ainb] -= counts
 a = np.repeat(ua, cc)

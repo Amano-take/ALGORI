@@ -10,7 +10,8 @@ class Player:
         self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
         self.get_num = np.frompyfunc(Card.getnumber, 1, 1)
-        self.logging = logging.getLogger("ex")
+        self.logging = logging.getLogger("player")
+        self.logging.setLevel(logging.WARN)
         
 
     def get_card(self, c:np.ndarray[int]):
@@ -21,42 +22,34 @@ class Player:
         else:
             self.Cards += c
     
-    #何のためにあるのだろうか？
-    def get_intcard(self, n:np.ndarray[int]):
-        self.num_cards += len(n)
-        tt = np.zeros(Card.VARIATION, dtype=np.int8)
-        for i in n:
-            tt[i] += 1
-        self.Cards += tt
-
     def give_all_my_cards(self):
         self.num_cards = 0
         ans = self.Cards.copy()
         self.Cards -= self.Cards
         return ans
+    
+    def strategy(self, cs):
+        i = np.where(cs > 0)[0][0]
+        if i >= 52 and i != 55:
+            c = np.random.randint(4)
+            self.logging.info(Player.colors[c])
+        else:
+            c = None
+        return i, c
 
     def get_turn(self, c:int, color, trash=None, turn_plus = 1):
-        if color is None:
-            cs  = (Player.rule.canSubmit_byint(c) * self.Cards)
-        else:
-            cs = (Player.rule.canSubmit_byint(c, color) * self.Cards)
-        #pass
+        cs = (Player.rule.canSubmit_byint(c, color) * self.Cards)
         if np.all(cs==0):
             return -1, None
         
         #submit
-        i = np.where(cs > 0)[0][0]
+        i, c = self.strategy(cs)
         self.Cards[i] -= 1
         self.num_cards -= 1
-        #wildカードで色の宣言
-        if i >= 52 and i != 55:
-            c = np.random.randint(4)
-            self.logging.info(Player.colors[c])
-            return i, c
-        
         if self.number_of_cards() == 1:
             self.logging.info("UNO!!")
-        return i, None
+
+        return i, c
         
     def show_my_cards(self):
         ans = []
@@ -80,6 +73,16 @@ class Player:
             return 0
         else:
             return np.sum(self.Cards * Player.rule.getscore())
+
+class RandomPlayer(Player):
+    def strategy(self, cs):
+        i = np.random.choice(np.where(cs > 0)[0], size=1)[0]
+        if i >= 52 and i != 55:
+            c = np.random.randint(4)
+            self.logging.info(Player.colors[c])
+        else:
+            c = None
+        return i, c
 
 #なぜか遅くなる始末
 class NewPlayer(Player):
