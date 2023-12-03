@@ -219,7 +219,6 @@ class PMMaster(Master):
                 self.show_player_cards(self.turn)
             if self.turn == 3:
                 action, color = self.players[3].get_turn(self.desk, self.desk_color, self.turn_plus, self.player_rest)
-                
             else:
                 action, color = self.give_turn(self.turn, self.desk, self.desk_color, self.trash, self.turn_plus)
                 assert isinstance(self.players[3], PMPlayer)
@@ -346,5 +345,6 @@ if __name__ == "__main__":
         for i in tqdm.tqdm(range(1000)):
             scores += tm.set_and_game()
         print(scores)
-    except:
+    except Exception as e:
+        print(e)
         print(scores)

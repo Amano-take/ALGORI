@@ -209,8 +209,8 @@ class ProbabilityModel:
 
         diff = af_my_card - pre_my_card
         bef = np.where(diff < 0, -diff, 0)
-        self.cardcount -= pre_my_card
-        self.sum_cardcount -= np.sum(pre_my_card)
+        self.cardcount -= bef
+        self.sum_cardcount -= np.sum(bef)
         af = np.where(diff > 0, diff, 0)
         stuck_af = np.repeat(self.arange, af)
         self._shuffle_distribute_bef(self.have_num_card, bef)
@@ -336,11 +336,14 @@ if __name__ == "__main__":
     my_card = np.zeros(Card.VARIATION, dtype=np.int8)
     my_card[[0, 15, 24, 33, 40, 55]] += 1
     my_card[33] += 1
+    my_card[17] += 1
     stuck_my = np.repeat(PM.arange, my_card)
     PM.i_get_card(stuck_my)
     #PM.player_submit_card(1, 15)
     #print(PM.plpb[:, 15])
+    my_card[17] -= 1
     rest = PM.get_rest(my_card, 17)
+    
     cumsum = PM.get_player_cumsum()
     PM.other_player_get_card(1, my_card, 83)
     #print(cumsum[1, 1, :])
