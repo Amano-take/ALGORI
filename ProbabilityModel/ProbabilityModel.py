@@ -209,8 +209,8 @@ class ProbabilityModel:
 
         diff = af_my_card - pre_my_card
         bef = np.where(diff < 0, -diff, 0)
-        self.cardcount -= bef
-        self.sum_cardcount -= np.sum(bef)
+        self.cardcount -= pre_my_card
+        self.sum_cardcount -= np.sum(pre_my_card)
         af = np.where(diff > 0, diff, 0)
         stuck_af = np.repeat(self.arange, af)
         self._shuffle_distribute_bef(self.have_num_card, bef)
