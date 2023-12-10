@@ -11,6 +11,7 @@ from Master import Master
 
 
 class RealMaster(Master):
+    #TODO: pass後にカードを提出できるようにする。
     def game_start(self):
         show_flag = self.level <= logging.DEBUG
         while not self.is_game_finished():

@@ -99,6 +99,8 @@ class ProbabilityModel:
         """
         card_num = self.num_card(card)
         r = self.cardcount[card]
+        if deck_num != Card.VARIATION * 2:
+            raise ValueError("AAa")
         for j in range(0, card_num + 1):
             # 分母の寄与
             multiple1 = (deck_num - r + 1) / (card_num - r + 1)
@@ -106,9 +108,9 @@ class ProbabilityModel:
             multiple2 = (card_num - r - j + 1) / (
                 deck_num - self.have_num_card[pid - 1] - self.sum_cardcount + 1
             )
-            if np.abs(multiple2) > 100:
-                print(deck_num, self.have_num_card[pid - 1], self.sum_cardcount)
-                sys.exit(0)
+            if (card_num - r + 1) == 0 or deck_num - self.have_num_card[pid - 1] - self.sum_cardcount + 1 == 0:
+                print(deck_num, self.have_num_card[pid - 1], self.sum_cardcount, r, card)
+                print(multiple1, multiple2)
                 raise ValueError("Stop IT")
 
             self.plpb[pid - 1][card][j] *= multiple1 * multiple2
@@ -205,8 +207,11 @@ class ProbabilityModel:
         self.sum_cardcount = np.sum(my_card) + 1
         self.drawcount = np.repeat(0, repeats=3).astype(np.int8)
 
-    def shuffle(self, pid: int, pre_my_card, af_my_card):
-        total = self._shuffle_num_card(pid, pre_my_card)
+    def shuffle(self, pid: int, pre_my_card, af_my_card, reverse):
+        """
+        reverse: +1 or -1
+        """
+        total = self._shuffle_num_card(pid, pre_my_card, reverse)
         self._shuffle_average()
 
         diff = af_my_card - pre_my_card
@@ -238,20 +243,21 @@ class ProbabilityModel:
                 self.plpb[i - 1][card] = temp / np.sum(temp)
 
     def _shuffle_average(self):
-        average = np.sum(self.plpb, axis=0)
+        average = np.sum(self.plpb, axis=0) / 3
         for i in range(3):
             self.plpb[i] = np.copy(average)
 
-    def _shuffle_num_card(self, pid, pre_my_card):
+    def _shuffle_num_card(self, pid, pre_my_card, reverse):
         mynum = np.sum(pre_my_card)
         other_num = np.sum(self.have_num_card)
         total = mynum + other_num
         rest = total % 4
         basic = total // 4
+        
         self.have_num_card = np.repeat(basic, 3).astype(np.int8)
         for i in range(1, rest + 1):
-            if (pid + i) % 4 >= 1:
-                self.have_num_card[((pid + i) % 4) - 1] += 1
+            if (pid + reverse * i) % 4 >= 1:
+                self.have_num_card[((pid + reverse * i) % 4) - 1] += 1
         return total
 
     def other_player_pass(self, pid: int, desk: int, color: int):
@@ -274,7 +280,9 @@ class ProbabilityModel:
         num_card = self.have_num_card
         cumsumss = np.copy(cumsums)
         ruikei = np.zeros(Card.VARIATION, dtype=np.int8)
-
+        if np.sum(rest) < np.sum(num_card):
+            print(rest, self.have_num_card)
+            raise ValueError("waaaaa")
         for i in range(3):
             ans = []
             t = 1
@@ -305,11 +313,12 @@ class ProbabilityModel:
             try:
                 rest_[uo] -= co
             except:
-                print(others)
+                print(others, rest, self.trash)
                 raise ValueError("rest____")
 
         if np.any(rest_ < 0):
             print(others, rest, self.trash)
+            print(self.plpb[:, rest_ < 0])
             print(rest_)
             rest_ = np.where(rest_ < 0, 0, rest_)
             raise ValueError("nannze")
