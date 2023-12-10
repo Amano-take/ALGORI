@@ -145,29 +145,30 @@ class PMPlayer(Player):
             else:
                 action_score[(card, None)] = self.simulate(turn_plus, card, None, cumsum, player_rest)
             self.Cards[card] += 1
-            self.num_cards += 1 
+            self.num_cards += 1
+
         return max(action_score, key=action_score.get)
     
     def simulate(self, turn_plus, card, color, cumsum, player_rest):
-        scores = np.zeros(4)
+        scores = 0
         rest = self.pm.get_rest(self.Cards, card)
         self.logging.info("simulation start")
         simulate_num = PMPlayer.simulate_num
         value_rest = np.sum(rest)
-        if value_rest < 10:
-            simulate_num = 10000
-        elif value_rest < 20:
+        if value_rest < 30:
             simulate_num = 7000
-        elif value_rest < 30:
-            simulate_num = 5000
         elif value_rest < 40:
+            simulate_num = 5000
+        elif value_rest < 50:
+            simulate_num = 3000
+        elif value_rest < 80:
             simulate_num = 2000
         else:
             return self.card2score()
         for _ in range(simulate_num):
             others, deck, trash = self.pm.get_player_card(cumsum, rest)
-            scores += self.simmaster.set_board(deck, turn_plus, self.Cards, others, trash, card, color, 0, player_rest) / simulate_num
-        return self.scores2score(scores)
+            scores += self.scores2score(self.simmaster.set_board(deck, turn_plus, self.Cards, others, trash, card, color, 0, player_rest) / simulate_num)
+        return scores
     
     def card2score(self):
         cscore = 0
@@ -177,16 +178,17 @@ class PMPlayer(Player):
         #数のスコア
         nscore = 0
         for i in range(13):
-            nscore += np.any(self.Cards[i: i + 53: 13])
+            nscore += np.any(self.Cards[i: i + 40: 13])
         #wildスコア
         wscore = np.sum(self.Cards[52:])
-        return cscore * 4 + nscore + wscore
+        return cscore/4 + nscore/13 + wscore
     
     def scores2score(self, scores):
-        return scores[0] - np.max(scores[1:])
+        return scores[0] - np.average(scores[1:])
 
     def get_turn(self, c: int, color, turn_plus, player_rest):
         cs = (Player.rule.canSubmit_byint(c, color) * self.Cards)
+
         if np.all(cs==0):
             return self.pass_turn()
         
@@ -255,7 +257,7 @@ class PMMaster(Master):
             if self.turn == 3:
                 action, color = self.players[3].get_turn(self.desk, self.desk_color, self.turn_plus, self.player_rest)
             else:
-                self.logging.debug(str(self.players[self.turn].num_cards) +  str(self.players[3].pm.have_num_card))
+                #self.logging.debug(str(self.players[self.turn].num_cards) +  str(self.players[3].pm.have_num_card))
                 action, color = self.give_turn(self.turn, self.desk, self.desk_color, self.trash, self.turn_plus)
                 assert isinstance(self.players[3], PMPlayer)
                 if action >= 0:

@@ -68,6 +68,14 @@ class Ruler():
             #それ以外の場合はc1の種類に基づいて
             else:
                 return self.canSubmitArray[c1]
+        elif isinstance(color, np.integer):
+            #wildの場合は色に基づいて
+            if c1 >= 52:
+                return self.canSubmitColorArray[color]
+            #それ以外の場合はc1の種類に基づいて
+            else:
+                return self.canSubmitArray[c1]
+
         else:
             return self.canSubmitArray[c1]
 
@@ -78,7 +86,7 @@ class Test():
     def __init__(self, c:Card) -> None:
         print(c)
         r = Ruler()
-        print(r.score)
+        print(r.canSubmit_byint(55, 0))
 
 if __name__ == "__main__":
     Test(Card(0))
