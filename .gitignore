@@ -1,0 +1,6 @@
+*.pyc
+*.prof
+/dev_kit/
+__pycache__/
+/uno/
+uno\Lib\site-packages\_distutils_hack
