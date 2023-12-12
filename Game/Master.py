@@ -7,6 +7,7 @@ sys.path.append('d:\\Study\\Programming\\ALGORI\\Game')
 from Player import Player, RandomPlayer
 from Card import Card
 import logging
+from numba import jit
 class Master:
     player_num = 4
     card_plus_two = set([10, 23, 36, 49])
@@ -56,7 +57,7 @@ class Master:
         self.show_all_players_cards()
         self.logging.debug("start game")
         self.game_start()
-
+        
     def game_start(self):
         show_flag = self.level <= logging.DEBUG
         while not self.is_game_finished():
@@ -91,6 +92,7 @@ class Master:
         self.logging.debug("final score is: "+ str(scores))
         return scores
     
+    #numba化したいがselfを引数に取れないので、なかなか難しい
     def deal_action_color(self, action, color, show_flag=False):
         self.logging.debug("player"+ str(self.turn)+ ": submit "+str(Card(action))+ " to "+ str(Card(self.desk)))
         self.desk = action
@@ -322,7 +324,7 @@ class Test:
         log = logging.getLogger("ex")
         log.setLevel(logging.WARN)
         m = Master(log)
-        """大体2.2秒 -> 1.77秒"""
+        """大体2.2秒 -> 1.77秒(numpy) -> 1.0秒(numba)"""
         for i in range(1000):
             m.set_and_game()
                 
