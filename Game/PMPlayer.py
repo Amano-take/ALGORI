@@ -163,8 +163,6 @@ class PMPlayer(Player):
             simulate_num = 3000
         elif value_rest < 80:
             simulate_num = 2000
-        else:
-            return self.card2score()
         for _ in range(simulate_num):
             others, deck, trash = self.pm.get_player_card(cumsum, rest)
             scores += self.scores2score(self.simmaster.set_board(deck, turn_plus, self.Cards, others, trash, card, color, 0, player_rest) / simulate_num)

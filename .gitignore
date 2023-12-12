@@ -1,4 +1,7 @@
-/uno/
+
+
 *.pyc
 *.prof
 /dev_kit/
+__pycache__/
+/uno/
