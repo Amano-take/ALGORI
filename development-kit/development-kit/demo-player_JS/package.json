@@ -1,0 +1,16 @@
+{
+  "name": "uno-demo-player",
+  "version": "1.1.0",
+  "description": "",
+  "main": "demo-player.js",
+  "scripts": {
+    "start": "node demo-player.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "NIPPON TELEGRAPH AND TELEPHONE EAST CORPORATION",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "socket.io-client": "^2.3.0"
+  }
+}

@@ -1,0 +1,72 @@
+- const BASE_URL = "/api/v1/admin/web"
+- const TEST_TOOL_TOP_URL = "/api/v1/test-tool"
+
+-
+  const gameStatus = {
+    'new': '新規',
+    'starting': '試合中',
+    'finish': '試合終了',
+  }
+
+// 新しいものが上になるように配置
+-
+  const whiteWildName = {
+    'skip_bind_2': 'スキップバインド2',
+    'bind_2': 'バインド2',
+  }
+
+-
+  const eventName = {
+    'first-player': '対戦開始',
+    'next-player': '次のターン',
+    'color-change-request':'色変更の要求',
+    'color-of-wild': '色の変更',
+    'shuffle-wild': '手札をシャッフル',
+    'play-card': 'カードを出す',
+    'draw-card': 'カードを引く',
+    'play-draw-card': '引いたカードを出す',
+    'pointed-not-say-uno': 'UNO宣言漏れ指摘',
+    'challenge':'チャレンジ',
+    'public-card': '手札公開',
+    'special-logic':'スペシャルロジック',
+    'finish-turn': '対戦終了',
+    'penalty': 'ペナルティ',
+  }
+
+-
+  const drawReason = {
+    'draw_2': 'ドロー2',
+    'wild_draw_4': 'ワイルドドロー4',
+    'bind_2': '白いワイルド（バインド2）',
+    'skip_bind_2': '白いワイルド（スキップバインド2）',
+    'nothing': 'プレイヤー判断',
+  }
+
+-
+  const colorName = {
+    red: '赤',
+    yellow: '黄',
+    green: '緑',
+    blue: '青',
+  }
+
+-
+  const cardScore = {
+    '0': 0,
+    '1': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    '7': 7,
+    '8': 8,
+    '9': 9,
+    skip: 20,
+    reverse: 20,
+    draw_2: 20,
+    wild: 50,
+    wild_draw_4: 50,
+    wild_shuffle: 40,
+    white_wild: 40,
+  }

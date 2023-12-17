@@ -9,6 +9,8 @@ from Game.Master import Master
 from Game.Card import Card
 from Game.Ruler import Ruler
 
+from numba import njit, jit
+
 
 class ProbabilityModel:
     one = [0, 13, 26, 39, 54]
@@ -55,7 +57,7 @@ class ProbabilityModel:
         self.drawcount = np.repeat(7, repeats=3).astype(np.int8)
         self.have_num_card = np.repeat(7, repeats=3).astype(np.int8)
 
-    def player_submit_card(self, pid: int, card: int):
+    def other_player_submit_card(self, pid: int, card: int):
         """
         pid:= 1, 2, 3
         """
@@ -82,8 +84,11 @@ class ProbabilityModel:
         restcount -= len(self.trash)
         restcount -= np.sum(mycard)
         restcount -= np.sum(self.have_num_card)
+        assert restcount == np.sum(self.inideckcount - self.cardcount) - np.sum(self.have_num_card)
+        
         if restcount < 0:
             self.trash_clean(mycard)
+
 
     def i_get_card(self, Cards: np.ndarray[int], deck_num=Card.VARIATION * 2):
         for card in Cards:
@@ -132,13 +137,7 @@ class ProbabilityModel:
         self.trash.append(card)
 
     def other_player_get_card(self, pid: int, my_card, card_num):
-        # 改善の余地あり。相手の手札確率を考慮していない。
-        utrash, ctrash = np.unique(self.trash, return_counts=True)
-        restcount = self.inideckcount.copy()
-        if len(utrash) != 0:
-            restcount[utrash] -= ctrash
-        restcount -= my_card
-        # restcountはPlayer型
+        restcount = self.uinideck - self.cardcount
         num_rest_Card = np.sum(restcount)
         draw = min(num_rest_Card - np.sum(self.have_num_card), card_num)
 

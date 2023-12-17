@@ -7,6 +7,7 @@ sys.path.append('d:\\Study\\Programming\\ALGORI\\Game')
 from Player import Player, RandomPlayer
 from Card import Card
 import logging
+import logging.config
 from numba import jit
 class Master:
     player_num = 4
@@ -82,7 +83,12 @@ class Master:
             #出ない場合
             else:
                 self.logging.debug("player"+str(self.turn)+ ": pass")
-                self.give_cards(self.turn)
+                cs = self.give_cards(self.turn)
+                self.logging.debug("player" + str(self.turn) + "get " + str(Card(cs[0])))
+                action, color = self.give_turn_after_pass(self.turn, self.desk, self.desk_color, cs)
+                if action >= 0:
+                    self.deal_action_color(action, color, show_flag)
+
             
             self.next_turn()
             self.logging.debug("-----")
@@ -206,6 +212,8 @@ class Master:
     def give_turn(self, pid:int, c:int, color:int):
         return self.players[pid].get_turn(c, color)
     
+    def give_turn_after_pass(self, pid:int, c:int, color:int, cs:np.ndarray[int]):
+        return self.players[pid].get_turn_after_pass(c, color, cs)
 
 
     def is_game_finished(self):
@@ -312,7 +320,7 @@ class Test:
         pass
     @staticmethod
     def testonece():
-        logging.basicConfig(format="%(message)s")
+        logging.basicConfig(format="%(message)s", filename="test.log", filemode="w")
         log = logging.getLogger("ex")
         log.setLevel(logging.DEBUG)
         m = Master(log)

@@ -10,55 +10,7 @@ from ProbabilityModel.ProbabilityModel import ProbabilityModel
 from Master import Master
 
 #通信を行うことを想定
-class RealPlayer(Player):
-    def join_room_callback(self, your_id):
-        self.playername2_123 = ddict()
-        self.playername2_123[your_id] = 0
-        self.myname= your_id
 
-    def first_player(self, first_card, play_order:list):
-        my_turn = play_order.index(self.myname)
-        for i in range(1, 4):
-            self.playername2_123[play_order[(my_turn + i)%4]] = i
-        
-    def emit_play_card(self, card, color, yell_uno):
-        #TODO:
-        if yell_uno:
-            self.logging.info("Uno!")
-        return card, color
-    
-    def on_play_card(self, player_id, card, color, yell_uno, color_of_wild):
-        pindex = self.playername2_123[player_id]
-    
-    def test_on_play_card(self, player_id, card, color_of_wild="red", yell_uno=False):
-        pindex = self.playername2_123[player_id]
-
-    def on_draw_card(self, player_id, draw_num):
-        #draw_処理は自分で行うこととする
-        pindex = self.playername2_123[player_id]
-
-    def emit_color_of_wild(self):
-        """
-        常に黄色を返却
-        """
-        return 1
-    
-    def on_color_of_wild(self, color):
-        pass
-
-    def shuffle_wild(self, receive_cards):
-        self.Cards -= self.Cards
-        self.on_receiver_card(receive_cards, is_penalty=False)
-
-    def on_receiver_card(self, cards_reveive:np.ndarray[int], is_penalty=False):
-        super().get_card(cards_reveive)
-
-    def on_finish_turn(self, trun_no, winner, score):
-        self.Cards -= self.Cards
-
-    #super()にしたほうがよさそうだが可読性のため
-    def next_player(self):
-        pass
 
 class PMPlayer(Player):
     simulate_num = 1000

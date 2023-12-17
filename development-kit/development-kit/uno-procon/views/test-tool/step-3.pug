@@ -1,0 +1,117 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .language.select
+    select.small(onchange="javasctipt:changeLanguage(this)")
+     option(value="javascript", selected=(lang === 'javascript' ? true : false))= "Javascript"
+     option(value="python", selected=(lang === 'python' ? true : false))= "Python"
+  .main
+    .content
+      h2= pageTitle
+
+      .description
+        p.note.center= "このSTEPではご自身で考えた戦略を実装するフローを紹介しています。"
+        p.note.center= "戦略部分のプログラムはご自身で自由に記述してください。"
+
+      .test-tool
+        div
+          .horizontal
+            span.number= "1"
+            div
+              p.description= "ディーラープログラムに接続し、自分のIDを管理する"
+          .console
+            .file-name
+              span= codes.MANAGE_ID_AND_CARDS.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.MANAGE_ID_AND_CARDS.source.trim()
+
+        div
+          .horizontal
+            span.number= "2"
+            div
+              p.description= "自分の手番の時に出すカードを選出する関数を作成する"
+              p.note= "選出するロジックは自由に記述してください。"
+          .console
+            .file-name
+              span= codes.CREATE_CARD_SELECTING_FUNCTION.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.CREATE_CARD_SELECTING_FUNCTION.source.trim()
+
+        div
+          .horizontal
+            span.number= "3"
+            div
+              p.description= "自分の手番の時にカードを引くイベントを呼び出す実装をする"
+              p.note= "前のプレイヤーの出したカードの効果で引く場合や、自分の手札に出せるカードがない時にカードを引きます。"
+              p.note.strong= "場に出すことができるカードを引いた場合、カードを場に出すか出さないかはご自身で決定できます。"
+          .console.program-player-js
+            .file-name
+              span= codes.EXECUTE_CARD_SELECTING_FUNCTION.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.EXECUTE_CARD_SELECTING_FUNCTION.source.trim()
+
+        div
+          .horizontal
+            span.number= "4"
+            div
+              p.description= "色の変更を行う実装をする"
+          .console.program-player-js
+            .file-name
+              span= codes.CREATE_CHANGE_COLOR_FUNCTION.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.CREATE_CHANGE_COLOR_FUNCTION.source.trim()
+
+        div
+          .horizontal
+            span.number= "5"
+            div
+              p.description= "チャレンジを行う実装をする"
+          .console.program-player-js
+            .file-name
+              span= codes.CREATE_CHALLENGE_FUNCTION.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.CREATE_CHALLENGE_FUNCTION.source.trim()
+
+        div
+          .horizontal
+            span.number= "6"
+            div
+              p.description= "スペシャルロジックの実装をする"
+              p.note= "選出するロジックは自由に記述してください。"
+              p.note= "発動するタイミングは自由です。どのプレイヤーの手番のときでも発動できます。"
+              p.note
+                span= "※スペシャルロジックが頻発すると、ゲーム進行に著しい遅れが生じる可能性があるため、"
+                span= "1対戦の中で10回までしか発動しないようにディーラープログラムによって制御されています。"
+              p.note= "※10回以上発動してもペナルティの対象にはなりません。"
+
+        div
+          .horizontal
+            span.number= "7"
+            div
+              p.description= "UNO宣言を忘れているプレイヤーを指摘するロジックを実装する"
+              p.note= "手札の枚数と「UNO」の宣言を行ったかをチェックするロジックは自由に記述してください。"
+              p.note= "発動するタイミングは自由です。どのプレイヤーの手番のときでも発動できます。"
+              p.note
+                span= "他のプレイヤーがカードを出した時に手札の枚数を監視し、適切なタイミングで「UNO」の宣言を行ったかをチェックします。"
+                span= "山札からカードを引いた場合やペナルティでカードが配布された場合など、手札が増えるタイミングがあります。"
+              p.note= "このイベントは、他のプレイヤーと指摘したタイミングが重なってもペナルティの対象にはなりません。"
+
+        div
+          .horizontal
+            span.number= "8"
+            div
+              p.description= "他のイベント受信時に必要なロジックがある場合、ご自身で自由に実装する"
+
+        div
+          .horizontal
+            span.number= "9"
+            div
+              p.description= "次のSTEPに進みます"
+
+      .btn-wrapper
+        button(type="submit", onclick=`javascript:startTestStep("dealer-to-player")`).secondary.medium= "前のSTEPに戻る"
+        button(type="submit", onclick=`javascript:startTestStep("game")`).medium= "次のSTEPに進む"
+
+
+  script(src="/assets/script/test-tool.js")

@@ -28,6 +28,8 @@ class Player:
             Cards += c
             num_cards += np.sum(c)
         return num_cards
+    
+    
     def give_all_my_cards(self):
         self.num_cards = 0
         ans = self.Cards.copy()
@@ -63,6 +65,20 @@ class Player:
         if flag:
             self.logging.info("UNO!!")
         return i, c
+    
+    def get_turn_after_pass(self, c:int, color:int, get_card:np.ndarray[np.int8]):
+        get_card = get_card[0]
+        if Player.rule.canSubmit_byint(c, color)[get_card] == 0:
+            return -1, None
+        
+        else:
+            cs = np.zeros(Card.VARIATION, dtype=np.int8)
+            cs[get_card] = 1
+            i, c = self.strategy(cs)
+            self.num_cards, flag = self.__i_and_c(i, self.num_cards, self.Cards)
+            if flag:
+                self.logging.info("UNO!!")
+            return i, c
     
     @staticmethod
     @njit(cache = True)

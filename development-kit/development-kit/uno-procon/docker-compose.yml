@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    depends_on:
+      - mongodb
+      - redis
+    ports:
+      - '8080:8080'
+      - '3000:3000'
+    tty: true
+    networks:
+      - uno-network
+    environment:
+      TZ: Asia/Tokyo
+    entrypoint: "npm run"
+    command: "start:local-docker"
+    volumes:
+      - ./logs:/app/logs
+  
+  redis:
+    image: 'redis'
+    ports:
+      - '6379:6379'
+    volumes:
+      - './data:/data'
+    networks:
+      - uno-network
+  
+  mongodb:
+    image: mongo:5.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: mongo
+      MONGO_INITDB_DATABASE: uno-local
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./db:/db
+      - ./configdb:/data/configdb
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - uno-network
+
+networks:
+  uno-network:
+    #external: true

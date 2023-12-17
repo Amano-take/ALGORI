@@ -1,0 +1,73 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .language.select
+    select.small(onchange="javasctipt:changeLanguage(this)")
+     option(value="javascript", selected=(lang === 'javascript' ? true : false))= "Javascript"
+     option(value="python", selected=(lang === 'python' ? true : false))= "Python"
+  .main
+    .content
+      h2= pageTitle
+
+      description
+        p.note.center= "このSTEPではこれまでに実装したプログラムを、実際のディーラープログラムを使用して対戦させます。"
+
+      .test-tool
+        div
+          .horizontal
+            span.number= "1"
+            div
+              p.description= "管理者ツールにアクセスする"
+              p.note
+                a(href="http://localhost:8080/api/v1/admin/web", target="_blank")= "http://localhost:8080/api/v1/admin/web"
+
+        div
+          .horizontal
+            span.number= "2"
+            div
+              p.description= "新しくディーラーを作成する"
+              p.note= "ディラー名、対戦数を入力し、白いワイルドの効果を選択してください。"
+              p.note= "最初は1対戦から試し、試合が最後まで実施されることを確認してください。"
+              p.note= "1対戦が正常に終了したら、対戦数を増やして動作確認を行います。"
+
+        div
+          .horizontal
+            span.number= "3"
+            div
+              p.description= "作成したプレイヤープログラムを参加させる"
+              p.note= "作成したプレイヤープログラムまたはデモプレイヤープログラムで、4人のプレイヤーを参加させてください。"
+              p.note= "管理者ツールから「プレイヤーを追加する」のボタンを押してプレイヤーを追加することもできます。"
+              p.note= "デモプレイヤーを使用する場合は以下のコマンドで起動できます。"
+
+          div
+            p.note= "javascript版"
+            .console
+              pre
+                code.language-bash= `node demo-player/demo-player.js "http://localhost:8080" "{ディーラー名}" "{プレイヤー名}"`
+
+            p.note= "Python版"
+            .console
+              pre
+                code.language-bash= `python demo-player/demo-player.py "http://localhost:8080" "{ディーラー名}" "{プレイヤー名}"`
+            p.note= "コンソールからプレイヤーを追加した場合は、管理者ツールの画面を再読込してください。"
+
+        div
+          .horizontal
+            span.number= "4"
+            div
+              p.description= "試合を開始する"
+              p.note= "管理者ツール操作を行います。"
+
+        div
+          .horizontal
+            span.number= "5"
+            div
+              p.description= "作成したプログラムを提出をする"
+              p.note= "提出のための手順はシステム仕様書「４．プレイヤープログラムの開発〜提出までの手順」の「（４）プレイヤープログラムの提出について」を参照してください。"
+
+      .btn-wrapper
+        button(type="submit", onclick=`javascript:startTestStep("detail")`).secondary.medium= "前のSTEPに戻る"
+
+
+  script(src="/assets/script/test-tool.js")

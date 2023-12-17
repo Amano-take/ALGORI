@@ -1,0 +1,25 @@
+extends ../_layout
+
+block main
+  .language.select
+    select.small(onchange="javasctipt:changeLanguage(this)")
+     option(value="javascript", selected=(lang === 'javascript' ? true : false))= "Javascript"
+     option(value="python", selected=(lang === 'python' ? true : false))= "Python"
+  .main
+    .content
+      h2= pageTitle
+
+      .disctription
+        p.note.center= "提出するプログラムはどの言語を使用しても構いません。"
+        p.note.center
+          span="個々で紹介する手順に沿って開発しない場合でも、提出前には必ず1試合行い、"
+          span="プログラムが途中で止まらないことを確認してください。"
+
+      .test-tool
+          each step, index in steps
+            div.test-tool-step
+              h3= `${step.title}`
+              button(type="submit", onclick=`javascript:startTestStep("${step.url}")`).medium= step.btnTitle
+
+
+  script(src="/assets/script/test-tool.js")

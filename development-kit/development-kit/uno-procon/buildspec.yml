@@ -1,0 +1,25 @@
+version: 0.1
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region ap-northeast-1)
+      - $(aws ecs --region ap-northeast-1 describe-task-definition --task-definition $ECS_TASK_DEFINITION_ARN --query taskDefinition | jq '.containerDefinitions[0].image="<IMAGE1_NAME>"' > taskdef.json)
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t uno-app-${ENV} .
+      - docker tag uno-app-${ENV}:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/uno-app-${ENV}:latest
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/uno-app-${ENV}:latest
+      - echo "[{\"name\":\"app\",\"imageUri\":\"$AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/uno-app-${ENV}:latest\"}]" > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - taskdef.json

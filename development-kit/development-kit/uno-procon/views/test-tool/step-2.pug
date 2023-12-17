@@ -1,0 +1,69 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .language.select
+    select.small(onchange="javasctipt:changeLanguage(this)")
+     option(value="javascript", selected=(lang === 'javascript' ? true : false))= "Javascript"
+     option(value="python", selected=(lang === 'python' ? true : false))= "Python"
+  .main
+    .content
+      h2= pageTitle
+      
+      .description
+        p.note.center= "このSTEPではディーラーからプレイヤーへのデータ受信が行えるように実装していきます。"
+
+      .test-tool
+        div
+          .horizontal
+            span.number= "1"
+            div
+              p.description= "ディーラーからのデータ受信部分を作成する"
+          .console
+            .file-name
+              span= codes.CREATE_RECEIVE_DATA_FUNCTION.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.CREATE_RECEIVE_DATA_FUNCTION.source.trim()
+
+        div
+          .horizontal
+            span.number= "2"
+            div
+              p.description= "各イベントのデータを受信し、処理が行われているかを確認する"
+              p.note= "下記のイベント実行は通信できることを確認するための機能であるため、固定値を送信しています。"
+              p.note= "受信時の処理が行われているか確認しましょう。上記コードを実装した場合コンソールにログが表示されます。"
+          .console
+            pre
+              code.language-bash= codes.SEND_DATA_TO_PLAYER.commands.join('\n')
+          div
+            each event, i in events
+              hr
+              each eventData, j in event.list
+                div
+                  .horizontal.section
+                    span.event= event.name + (eventData.type ? (' - ' + eventData.type) : '')
+                    button(type="submit", onclick=`javascript:sendDealerToPlayer("${event.name}", "${j}")`).small= "submit"
+                  .console
+                    - const text = JSON.stringify(eventData.data, null, "\t")
+                    pre
+                      code.language-json= text
+
+        div
+          .horizontal
+            span.number= "3"
+            div
+              p.description= "他のイベントの受信部分も同様に実装する"
+
+        div
+          .horizontal
+            span.number= "4"
+            div
+              p.description= "次のSTEPに進みます"
+
+      .btn-wrapper
+        button(type="submit", onclick=`javascript:startTestStep("player-to-dealer")`).secondary.medium= "前のSTEPに戻る"
+        button(type="submit", onclick=`javascript:startTestStep("detail")`).medium= "次のSTEPに進む"
+
+
+  script(src="/assets/script/test-tool.js")
+  script(src="/assets/script/test-tool-step-2.js")

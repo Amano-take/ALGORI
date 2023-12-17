@@ -1,0 +1,27 @@
+block config
+  include ./_config
+
+doctype html
+html(lang='ja')
+  head
+    meta(charset='UTF-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title= pageTitle + ' | ALGORI'
+    link(rel='stylesheet', type='text/css', href='/assets/stylesheet/index.css')
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/vs2015.min.css')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js')
+    script
+      | hljs.highlightAll();
+
+  body
+    header
+      a.header-title(href= topPath)
+        h1= 'ALGORI'
+        span.title= title
+
+    block main
+
+    block global

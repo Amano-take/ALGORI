@@ -1,0 +1,69 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .main
+    .content
+      h2= pageTitle
+
+
+      .panel 
+        table
+          tr
+            th= "ID"
+            td= _doc.code
+          tr
+            th= "プレイヤー名"
+            td= _doc.name
+          tr
+            th= "総得点"
+            td= (_doc.total_score ||0).toLocaleString()
+          tr
+            th= "作成日時"
+            td= _doc.dateCreated.toLocaleString()
+          tr
+            th= "更新日時"
+            td= _doc.dateUpdated.toLocaleString()
+
+
+      .list
+        each room in Object.keys(_doc.score || {}).reverse()
+          .panel
+            - const game = _doc.score[room]
+            - const total = game.reduce((sum, score) => (sum += score), 0)
+
+            .info.horizontal
+              div.horizontal
+                label= "ディーラーコード"
+                span.dealer-id= room
+              div.horizontal
+                label= "合計得点"
+                span.dealer-id= total.toLocaleString()
+
+            .info.horizontal
+              - const scoreMap = [];
+              - let sum = 0;
+              - for(let i = 0; i < game.length; i++)
+                - sum += (game[i] || 0)
+                - scoreMap.push({ score: game[i] || 0, sum: sum });
+
+              table.result
+                - for(let i = 0; i < game.length; i+=10)
+                    tr
+                      - for(let j = 0; j < 10; j++)
+                        if (scoreMap[i + j])
+                          th=i + j + 1
+                        else
+                          th= '-'
+                    tr
+                      - for(let j = 0; j < 10; j++)
+                        if (scoreMap[i + j])
+                          td.score= scoreMap[i + j].score.toLocaleString()
+                        else
+                          td= '-'
+                    tr
+                      - for(let j = 0; j < 10; j++)
+                        if (scoreMap[i + j])
+                          td.score= scoreMap[i + j].sum.toLocaleString()
+                        else
+                          td= '-'

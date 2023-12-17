@@ -1,0 +1,150 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .language.select
+    select.small(onchange="javasctipt:changeLanguage(this)")
+     option(value="javascript", selected=(lang === 'javascript' ? true : false))= "Javascript"
+     option(value="python", selected=(lang === 'python' ? true : false))= "Python"
+  .main
+    .content
+      h2= pageTitle
+
+      .description
+        p.note.center= "以下の手順に沿ってプレイヤープログラムを実装する準備をしましょう。"
+
+      .test-tool
+        div
+          .horizontal
+            span.number= "1"
+            div
+              p.description= "言語のインストール"
+              p.note
+                span= (lang == "javascript" ? "Node.js" : "python") + " 公式ページを参照しご自身の環境に合わせてインストールを行ってください。"
+                span
+                  if lang === 'javascript'
+                    a(href="https://nodejs.org/ja" target="_blank")= "https://nodejs.org/ja"
+                  else
+                    a(href="https://www.python.org/" target="_blank")= "https://www.python.org/"
+
+        div
+          .horizontal
+            span.number= "2"
+            div
+              p.description= "プロジェクトを作成する"
+              p.note
+                span= "提出プログラムに開発キットのコードを含まないよう、"
+                span= "開発キットを展開した場所とは異なる独立したディレクトリで作成してください。"
+          .console
+            pre
+              code.language-bash= codes.CREATE_PROJECT.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "3"
+            div
+              p.description= "プログラムファイルを作成する"
+          .console
+            pre
+              code.language-bash= codes.CREATE_PROGRAM_FILE.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "4"
+            div
+              p.description= "接続先をコマンドラインから指定できるようにする"
+          .console
+            .file-name
+              span= codes.SPECIFY_SERVER.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.SPECIFY_SERVER.source.trim()
+
+        div
+          .horizontal
+            span.number= "5"
+            div
+              p.description= "接続先がテスト用ディーラーであることを判定する"
+          .console
+            .file-name
+              span= codes.IS_TEST_TOOL.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.IS_TEST_TOOL.source.trim()
+          .console
+            pre
+              code.language-bash= codes.IS_TEST_TOOL.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "6"
+            div
+              p.description= "ディーラー名をコマンドラインから指定できるようにする"
+          .console
+            .file-name
+              span= codes.SPECIFY_DEALER.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.SPECIFY_DEALER.source.trim()
+          .console
+            pre
+              code.language-bash= codes.SPECIFY_DEALER.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "7"
+            div
+              p.description= "プレイヤー名をコマンドラインから指定できるようにする"
+              p.note= "同一プログラムで複数のプレイヤーを起動させることができるので、コマンドラインから指定できるようにします。"
+          .console
+            .file-name
+              span= codes.SPECIFY_PLAYER.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.SPECIFY_PLAYER.source.trim()
+          .console
+            pre
+              code.language-bash= codes.SPECIFY_PLAYER.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "8"
+            div
+              p.description= "socket.ioモジュールをインストールします"
+          .console
+            pre
+              code.language-bash= codes.INSTALL_SOCKET_MODULE.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "9"
+            div
+              p.description= "プログラムにsocket.ioモジュールを読み込みます"
+          .console
+            .file-name
+              span= codes.IMPORT_SOCKET_MODULE.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.IMPORT_SOCKET_MODULE.source.trim()
+          .console
+            pre
+              code.language-bash= codes.IMPORT_SOCKET_MODULE.commands.join('\n')
+
+        div
+          .horizontal
+            span.number= "10"
+            div
+              p.description= "実装に必要な定数を定義します"
+              p.note= "通信イベント、カードの色、記号カード、カードを引く理由を事前に定義しておきます。"
+          .console
+            .file-name
+              span= codes.DEFINE_CONSTANT.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.DEFINE_CONSTANT.source.trim()
+
+        div
+          .horizontal
+            span.number= "11"
+            div
+              p.description= "次のSTEPに進みます"
+
+      .btn-wrapper
+        button(type="submit", onclick=`javascript:startTestStep("player-to-dealer")`).medium= "次のSTEPに進む"
+
+
+  script(src="/assets/script/test-tool.js")

@@ -1,0 +1,301 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .main
+    .content
+      h2= pageTitle
+
+
+      - const playerInfo = {}
+      - players.forEach(player => {
+      -  playerInfo[player.code] = player
+      - });
+
+
+      .panel.condition
+        .info.horizontal
+          div.horizontal
+            label.label= "ディーラー"
+            span= game.name
+            span= '(' + game.code + ')'
+          div
+            label= "ステータス"
+            span= gameStatus[game.status]
+          div
+            label= "白いワイルド"
+            span= whiteWildName[game.whiteWild]
+          div
+            label= "対戦数"
+            - let finish = game.turn
+            span.turn= ((finish || 0).toLocaleString() || 0) + ' / ' + (game.totalTurn || 1000).toLocaleString()
+        .info.horizontal
+          div
+            label= "作成日"
+            span= game.dateCreated.toLocaleString()
+          div
+            label= "更新日"
+            span= game.dateUpdated.toLocaleString()
+
+        .info.horizontal
+          label= "総得点"
+          div.flex-one
+            table
+              thead
+                tr
+                  each player in players
+                    th
+                      span.players= `${player.name} (${player.code})`
+              tbody
+                if gameEndLog
+                  tr
+                    each player in players
+                      td.scores= `${gameEndLog.contents.score[player.code].toLocaleString()}点`
+                else
+                  tr
+                    td(colSpan = 4)= "集計中"
+
+        form(name="search")
+          .info.horizontal
+            label= "検索条件"
+            div.left.event-list
+              -
+              each event in Object.keys(eventName)
+                - const name = eventName[event]
+                div
+                  - const checked = (currentQuery.event || '').indexOf(event) >= 0
+                  input(type="checkbox" id='event-' + event, name="event" value=event checked=checked)
+                  label(name=event for='event-' + event)= name
+            input(type="hidden", name="turn", value=1)
+          div.operation.horizontal
+            button(type="submit", id="search-btn").small= "検索"
+
+
+      - const prev = currentQuery.turn - 1
+      - const next = currentQuery.turn + 1
+      .turn
+        if currentQuery.turn == 1
+          a(href=originalUrl.replace(/turn=\d+/, `turn=1`)).disabled= '<<'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${prev}`)).disabled= '<'
+        else
+          a(href=originalUrl.replace(/turn=\d+/, `turn=1`))= '<<'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${prev}`))= '<'
+        .jump-page
+          input(type="number", name="turn", id="log-page-number-upper", value=currentQuery.turn min=1, step=1).small
+          span= ` / ${game.totalTurn.toLocaleString()}対戦`
+          script
+            | const logTurnNumberUpper = document.getElementById('log-page-number-upper');
+            | logTurnNumberUpper.addEventListener('keypress', (e) => {
+            |   const url = '#{originalUrl}'
+            |     .replace(/&amp;/g, "&")
+            |     .replace(/&lt;/g, "<")
+            |     .replace(/&gt;/g, ">")
+            |     .replace(/&quot;/g, '"')
+            |     .replace(/&#x27;/g, "'")
+            |     .replace(/&#x60/g, "`")
+            |     .replace(/turn=\d+/, `turn=${e.target.value}`);
+            |
+            |   if (e.keyCode === 13) {
+            |     const errorMessage = document.getElementById('error-message-upper');
+            |     errorMessage.innerHTML = ''
+            |
+            |     const turn = Number(e.target.value);
+            |     if (turn < 1 || turn % 1 > 0) {
+            |       errorMessage.innerHTML = '対戦数は1以上の整数を入力してください。'
+            |       return;
+            |     }
+            |     window.location.href=url;
+            |   }
+            |   return false;
+            | })
+        if currentQuery.turn == game.totalTurn
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${next}`)).disabled= '>'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${game.totalTurn}`)).disabled= '>>'
+        else
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${next}`))= '>'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${game.totalTurn}`))= '>>'
+
+      .errors
+        p#error-message-upper= ''
+
+
+      .list.log
+        .panel
+          .info.horizontal
+            label= "対戦数"
+            span= currentQuery.turn
+
+          .info.horizontal
+            label= "得点"
+            div.flex-one
+              table
+                thead
+                  tr
+                    th= ""
+                    each player in players
+                      th
+                        span= `${player.name} (${player.code})`
+                tbody
+                  if turnEndLog
+                    tr
+                      th= "対戦得点"
+                      each player in players
+                        td.score-turn= `${turnEndLog.contents.score[player.code].toLocaleString()}点`
+                    tr
+                      th= "累計"
+                      each player in players
+                        td.score-total= `${turnEndLog.contents.total_score[player.code].toLocaleString()}点`
+                  else
+                    tr
+                      td(colSpan = 5)= "集計中"
+
+          .info.horizontal
+            label= "検索条件"
+            p.search-result-condition= (currentQuery.event || []).map(event => eventName[event]).join(',')
+
+          .info
+            table.log
+              thead
+                tr
+                  th= "ターン"
+                  th.medium= "イベント"
+                  th= "盤面"
+
+              tbody
+                each log in activities.data
+                  tr(onclick='javascript:showDetailLog(' + JSON.stringify(log) + ')')
+                    td= log.contents.number_turn_play
+
+                    td.medium.activity
+                      if log.player
+                        p.omit= playerInfo[log.player].name
+
+                      p= eventName[log.event]
+
+                      if (log.event === 'play-card' || log.event === 'play-draw-card') && log.contents.card_play
+                        - const card = log.contents.card_play
+                        - const cardSrc = `/assets/image/card/${card.color}-${card.special || card.number}.png`;
+                        img(src=cardSrc, alt="card", onerror='this.src=/assets/image/card/error.svg').card
+
+                      if log.event === 'draw-card' && log.contents.draw_reason
+                        p= `理由: ${drawReason[log.contents.draw_reason]}`
+                        each card of log.contents.card_draw
+                          - const cardSrc = `/assets/image/card/${card.color}-${card.special || card.number}.png`;
+                          img(src=cardSrc, alt="card", onerror='this.src=/assets/image/card/error.svg').card
+
+                      if log.event === 'color-of-wild'
+                        p= `${colorName[log.contents.color_of_wild]}`
+
+                      if log.event === 'challenge'
+                        if log.contents.is_challenge
+                          p= `結果: ${log.contents.result.is_challenge_success ? '成功' : '失敗'}`
+                        else
+                          p= "結果: 未トライ"
+
+                      if log.event === 'pointed-not-say-uno' && log.contents.target
+                        p= `対象: ${playerInfo[log.contents.target].name}`
+
+                      if log.event === 'penalty' && log.contents.cards_receive
+                        each card of log.contents.cards_receive
+                          - const cardSrc = `/assets/image/card/${card.color}-${card.special || card.number}.png`;
+                          img(src=cardSrc, alt="card", onerror='this.src=/assets/image/card/error.svg').card
+
+                    td
+                      div.desk
+                        if log.desk && log.desk.card_of_player
+                          - const order = turnStartLog.contents.play_order
+                          - const player_order = [order[0], order[1], order[3], order[2]] // 時計回りに配置するので、2段目は右から左に配置されるように調整
+                          each playerCode in player_order
+                            - const player = playerInfo[playerCode]
+                            - const card_of_player = log.desk.card_of_player[player.code]
+                            - const index = order.indexOf(player.code)
+                            div.player-card(class = player.code == log.player ? 'bg-strong' : '')
+                              div
+                                div.log-player-info
+                                  span.order-index= `${index + 1}番`
+                                  div.log-player-name
+                                    span.omit= player.name
+                                    span.omit= `(${player.code})`
+                                  - let score = card_of_player.reduce((sum, card) => {
+                                  -   return sum += cardScore[card.special || card.number || 0];
+                                  - }, 0);
+                                  span= card_of_player.length + '枚'
+                                  span= `${(score ? score * -1 : 0).toLocaleString()}点`
+                                if log.desk.yell_uno[player.code]
+                                  img(src='/assets/image/uno-logo.svg', alt="uno").yell-uno
+                              div.hand-cards
+                                each card in card_of_player
+                                  - const cardSrc = `/assets/image/card/${card.color}-${card.special || card.number}.png`;
+                                  img(src=cardSrc, alt="card", onerror='this.src=/assets/image/card/error.svg').card
+
+                        div.reveal
+                          div(class = log.desk.turn_right === false ? "turn-left" : "")
+                            div
+                              if log.desk && log.desk.before_card_play
+                                - const beforeCardPlay = log.desk.before_card_play
+                                - const beforeCardPlaySrc = `/assets/image/card/${beforeCardPlay.color}-${beforeCardPlay.special || beforeCardPlay.number}.png`;
+                                img(src=beforeCardPlaySrc, alt="card", onerror='this.src=/assets/image/card/error.svg').card
+                                - const cardPlay = log.contents.card_play
+                                if cardPlay
+                                  p= '→'
+                                  - const cardPlaySrc = `/assets/image/card/${cardPlay.color}-${cardPlay.special || cardPlay.number}.png`;
+                                  img(src=cardPlaySrc, alt="card", onerror='this.src=/assets/image/card/error.svg').card
+                          p= `山札: ${log.desk.draw_desk_number || 0}枚`
+                          p= `場札: ${log.desk.reveal_desk_number || 0}枚`
+
+
+      .turn
+        if currentQuery.turn == 1
+          a(href=originalUrl.replace(/turn=\d+/, `turn=1`)).disabled= '<<'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${prev}`)).disabled= '<'
+        else
+          a(href=originalUrl.replace(/turn=\d+/, `turn=1`))= '<<'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${prev}`))= '<'
+        .jump-page
+          input(type="number", name="turn", id="log-page-number-bottom", value=currentQuery.turn min=1, step=1).small
+          span= ` / ${game.totalTurn.toLocaleString()}対戦`
+          script
+            | const logTurnNumberBottom = document.getElementById('log-page-number-bottom');
+            | logTurnNumberBottom.addEventListener('keypress', (e) => {
+            |   const url = '#{originalUrl}'
+            |     .replace(/&amp;/g, "&")
+            |     .replace(/&lt;/g, "<")
+            |     .replace(/&gt;/g, ">")
+            |     .replace(/&quot;/g, '"')
+            |     .replace(/&#x27;/g, "'")
+            |     .replace(/&#x60/g, "`")
+            |     .replace(/turn=\d+/, `turn=${e.target.value}`);
+            |
+            |   if (e.keyCode === 13) {
+            |     const errorMessage = document.getElementById('error-message-bottom');
+            |     errorMessage.innerHTML = ''
+            |
+            |     const turn = Number(e.target.value);
+            |     if (turn < 1 || turn % 1 > 0) {
+            |       errorMessage.innerHTML = '対戦数は1以上の整数を入力してください。'
+            |       return;
+            |     }
+            |     window.location.href=url;
+            |   }
+            |   return false;
+            | })
+        if currentQuery.turn == game.totalTurn
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${next}`)).disabled= '>'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${game.totalTurn}`)).disabled= '>>'
+        else
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${next}`))= '>'
+          a(href=originalUrl.replace(/turn=\d+/, `turn=${game.totalTurn}`))= '>>'
+
+      .errors
+        p#error-message-bottom= ''
+
+
+  #detail-log(onclick="javascript:hideDetailLog()")
+    div#detail-log-inner-content
+      button.close(onclick="javascript:hideDetailLog()")
+        img(src="/assets/image/close.svg", alt="close")
+      pre
+        code#log-data.language-json
+
+
+  script(src="/assets/script/log.js")

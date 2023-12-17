@@ -6,6 +6,7 @@ class Card():
     赤、黄、緑、青 * 13(0, 1, ..9, +2, skip, reverse) + wild * 2(+4, all) + shuffle + skipbind2 + Empty
     v: 0, 1, .. 9 = 0, 1, ..9
     v: 10: +2 11: skip 12: reverse
+    52からがwild
     v: 0: +4, 1:all, 2:shuffle, 3:skipbind2
     white = wild 色とする
     """

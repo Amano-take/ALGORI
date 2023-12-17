@@ -1,0 +1,125 @@
+extends ../_layout
+
+block main
+  .main
+    .content
+      h2= pageTitle
+
+
+      .operation
+        - const ADD_DEALER_URL = BASE_URL + '/new'
+        .add.horizontal
+          form(action=ADD_DEALER_URL, method="POST")
+            input(type="text", id="new-dealer-name" name="name" placeholder="ディーラー名を入力してください")
+            input(type="number", id="total-turn", name="totalTurn" min=1, step=1 placeholder="対戦数").small
+            .select
+              select(id="white-wild" name="whiteWild")
+                each key of Object.keys(whiteWildName)
+                  option(value=key)= whiteWildName[key]
+            input(type="hidden", name="oneTimeToken", value = oneTimeToken)
+            button(type="submit", id="create-btn").small= "新規追加"
+
+        if message
+          .message
+            p.note.center= message
+
+        if errors && errors.length
+          .errors
+            each error in errors 
+              p= error.msg || error.message
+
+
+      #game-list.list
+        each room in data
+          .panel
+
+            .info.horizontal
+              div.horizontal
+                label= "ID"
+                span.dealer-id= room.code
+              div
+                label= "ディーラー名"
+                span.dealer-name= room.name
+              div
+                label= "ステータス"
+                span= gameStatus[room.status]
+              div
+                label= "白いワイルド"
+                span= whiteWildName[room.whiteWild]
+              div
+                label= "対戦数"
+                - let finish = room.turn
+                span= ((finish || 0).toLocaleString() || 0) + ' / ' + (room.totalTurn || 1000).toLocaleString()
+              a(href=BASE_URL).reload
+                img(src='/assets/image/reload.svg', alt="reload")
+
+            .info.player-list
+              if !room.players || room.players.length==0
+                p.strong.center= "まだプレイヤーが参加していません。"
+              else
+                table
+                  tbody
+                    each player in room.players
+                      tr
+                        th="名前（ID）: "
+                        td
+                          - const PLAYER_PAGE = BASE_URL + '/player/' + player
+                          a(href=PLAYER_PAGE).player-id= `${players[player].name} (${player})`
+                        th="ポイント: "
+                        td.right
+                          span= room.score && room.score[player] ? room.score[player].toLocaleString() : 0
+                        td
+                          - const RESULT = room.order && room.order[player] ? room.order[player] : 0
+                          span= '（勝利数: ' + RESULT + '）'
+
+              .buttons
+                if room.status == 'new' && room.players.length < 4
+                  - const ADD_PLAYER_URL = BASE_URL + '/' + room.code + '/player'
+                  form(method='POST', action=ADD_PLAYER_URL)
+                    input(type="hidden", name="oneTimeToken", value = oneTimeToken)
+                    button.add-btn.small.secondary()= 'プレイヤーを追加する'
+                else if room.status == "new"
+                  - const START_DEALER_URL = BASE_URL + '/' + room.code + '/start-dealer'
+                  form(method='POST', action=START_DEALER_URL)
+                    input(type="hidden", name="oneTimeToken", value = oneTimeToken)
+                    if room.players && room.players.length >= MIN_PLAYER
+                      button.start-btn.small(type='submit')= '試合開始'
+                    else
+                      button.small(disabled)= '試合開始'
+                else
+                  - const hasLog = !!room.players.length
+                  - const LOG_URL = BASE_URL + '/log/' + room.code + '?turn=1'
+                  - const LOG_DL_URL = BASE_URL + '/log/download/' + room.code
+                  a(href=LOG_URL class= hasLog ? '' : 'disabled').small.btn-link.secondary= 'ログを見る'
+                  a(href=LOG_DL_URL, download=true class= hasLog ? 'download-btn' : 'disabled').small.btn-link.secondary= 'ログをDL'
+
+            .info.horizontal
+              div
+                label= "作成日"
+                span= room.dateCreated.toLocaleString()
+              div
+                label= "更新日"
+                span= room.dateUpdated.toLocaleString()
+
+
+      .pagination
+        - const LIST_URL = BASE_URL + '?order=desc&page='
+        - const prev = page - 1
+        if page == 1
+          a(href=LIST_URL + "1").disabled= '<<'
+          a(href=LIST_URL + prev).disabled= '<'
+        else
+          a(href=LIST_URL + "1")= '<<'
+          a(href=LIST_URL + prev)= '<'
+        - for(let i = 1; i < totalPage + 1; i++)
+          if page != i
+            a(href=LIST_URL + i)= i
+          else 
+            a(href=LIST_URL + i).disabled= i
+        - const next = page + 1
+        if page == totalPage
+          a(href=LIST_URL + next).disabled= '>'
+          a(href=LIST_URL + totalPage).disabled= '>>'
+        else
+          a(href=LIST_URL + next)= '>'
+          a(href=LIST_URL + totalPage)= '>>'

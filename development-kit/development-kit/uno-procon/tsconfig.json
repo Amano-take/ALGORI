@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "sourceMap": false,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "lib": [
+      "dom"
+    ],
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "types/*",
+        "src/libs/another/types/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "types/*"
+  ]
+}

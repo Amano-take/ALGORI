@@ -1,0 +1,2 @@
+[scripts]
+start = "python3 demo-player.py 'http://localhost:8080/' 'Dealer 1' 'Player X'"

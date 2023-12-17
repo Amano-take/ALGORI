@@ -1,0 +1,51 @@
+{
+    "check-coverage": false,
+    "per-file": true,
+    "lines": 95,
+    "statements": 95,
+    "functions": 95,
+    "branches": 95,
+    "watermarks": {
+      "lines": [
+        80,
+        99
+      ],
+      "functions": [
+        80,
+        99
+      ],
+      "branches": [
+        80,
+        99
+      ],
+      "statements": [
+        80,
+        99
+      ]
+    },
+    "include": [
+      "src/**/*.controller.ts",
+      "src/**/*.service.ts"
+    ],
+    "exclude": [
+      "src/**/*.model.{ts,js}",
+      "src/**/*.route.{ts,js}",
+      "src/**/*.obj.{ts,js}",
+      "src/**/*.map.{ts,js}",
+      "src/**/index.{ts,js}"
+    ],
+    "reporter": [
+      "html",
+      "text",
+      "text-summary"
+    ],
+    "extension": [
+      ".js",
+      ".ts"
+    ],
+    "cache": false,
+    "report-dir": "./.public/test/coverage",
+    "clean": true,
+    "silent": false,
+    "all": true
+}

@@ -1,0 +1,86 @@
+extends ../_layout
+include ./_back-btn
+
+block main
+  .language.select
+    select.small(onchange="javasctipt:changeLanguage(this)")
+     option(value="javascript", selected=(lang === 'javascript' ? true : false))= "Javascript"
+     option(value="python", selected=(lang === 'python' ? true : false))= "Python"
+  .main
+    .content
+      h2= pageTitle
+      
+      .description
+        p.note.center= "このSTEPではプレイヤーからディーラーへデータ送信が行えるように実装していきます。"
+
+      .test-tool
+        div
+          .horizontal
+            span.number= "1"
+            div
+              p.description= "イベントごとにディーラーへの通信を実行できるようにする"
+              p.note= "コマンドラインの第6引数でイベント名を指定できるようにしますが、これは実装過程でのみ使用します。"
+              p.note= "提出プログラムは第6引数でイベントする機能は不要です。"
+          .console
+            .file-name
+              span= codes.SPECIFY_EVENT_NAME.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.SPECIFY_EVENT_NAME.source.trim()
+
+        div
+          .horizontal
+            span.number= "2"
+            div
+              p.description= "ディーラーへの通信を行う関数を作成する"
+              p.note= "この段階では送信データを固定値で実装し、イベントごとに必要なデータの型を確認します。"
+              p.note= "送信データの型については、仕様書の通信仕様を参照してください。"
+          .console
+            .file-name
+              span= codes.CREATE_SEND_DATA_FUNCTION.file
+            pre
+              code(class = lang === 'javascript' ? 'language-javascript' : '', class = lang === 'python' ? 'language-python' : '')= codes.CREATE_SEND_DATA_FUNCTION.source.trim()
+
+        div
+          .horizontal
+            span.number= "3"
+            div
+              p.description= "ディーラー名【TestDealer】でソケット通信を確認する"
+              p.note= "コマンドラインから第6引数にイベント名を指定して、プレイヤープログラムを起動します。"
+              p.note= "下記の実行結果をもとに、データ形式を確認してください。"
+              p.note= "ディーラーが正しい形式でデータを受け取った場合、実行結果に受信したデータが表示されます。"
+              p.note= "誤った形式でデータを受け取った場合、実行結果受信したーデータと正しいデータ形式のサンプルが表示されます。"
+          .console
+            pre
+              code.language-bash= codes.SEND_DATA_TO_DEALER.commands.join('\n')
+          div
+            each event, i in events
+              hr
+              div
+                .horizontal.section
+                  p.event-title= `${event}`
+                  button(type="submit", onclick=`javascript:resetEvent("${event}")`).small= "Reset"
+                .console(id=`${event}-console`)
+                  pre
+                    code.event-content.language-json(id=`${event}-content`)=  ""
+
+        div
+          .horizontal
+            span.number= "4"
+            div
+              p.description= "他のイベントの送信部分も同様に実装する"
+              p.note= "このSTEPでは、送信データをハードコードしていただいて構いません。"
+              p.note= "第6引数のイベント名を変更し、上記全てのイベントの送信関数を作成します。"
+
+        div
+          .horizontal
+            span.number= "5"
+            div
+              p.description= "次のSTEPに進みます"
+
+      .btn-wrapper
+        button(type="submit", onclick=`javascript:startTestStep("preparation")`).secondary.medium= "前のSTEPに戻る"
+        button(type="submit", onclick=`javascript:startTestStep("dealer-to-player")`).medium= "次のSTEPに進む"
+
+
+  script(src="/assets/script/test-tool.js")
+  script(src="/assets/script/test-tool-step-1.js")

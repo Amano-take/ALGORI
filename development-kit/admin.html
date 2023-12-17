@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>admin.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/*
+ * Visual Studio 2015 dark style
+ * Author: Nicolas LLOBERA <nllobera@gmail.com>
+ */
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #1E1E1E;
+  color: #DCDCDC;
+}
+
+.hljs-keyword,
+.hljs-literal,
+.hljs-symbol,
+.hljs-name {
+  color: #569CD6;
+}
+.hljs-link {
+  color: #569CD6;
+  text-decoration: underline;
+}
+
+.hljs-built_in,
+.hljs-type {
+  color: #4EC9B0;
+}
+
+.hljs-number,
+.hljs-class {
+  color: #B8D7A3;
+}
+
+.hljs-string,
+.hljs-meta-string {
+  color: #D69D85;
+}
+
+.hljs-regexp,
+.hljs-template-tag {
+  color: #9A5334;
+}
+
+.hljs-subst,
+.hljs-function,
+.hljs-title,
+.hljs-params,
+.hljs-formula {
+  color: #DCDCDC;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #57A64A;
+  font-style: italic;
+}
+
+.hljs-doctag {
+  color: #608B4E;
+}
+
+.hljs-meta,
+.hljs-meta-keyword,
+.hljs-tag {
+  color: #9B9B9B;
+}
+
+.hljs-variable,
+.hljs-template-variable {
+  color: #BD63C5;
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-builtin-name {
+  color: #9CDCFE;
+}
+
+.hljs-section {
+  color: gold;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/*.hljs-code {
+  font-family:'Monospace';
+}*/
+
+.hljs-bullet,
+.hljs-selector-tag,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #D7BA7D;
+}
+
+.hljs-addition {
+  background-color: #144212;
+  display: inline-block;
+  width: 100%;
+}
+
+.hljs-deletion {
+  background-color: #600;
+  display: inline-block;
+  width: 100%;
+}
+
+</style>
+<link rel="stylesheet" href="file:///Users/cnoir10/Documents/workspace/create-pdf/github-markdown.css" type="text/css">
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="admin-api">Admin api</h1>
+<h2 id="group-dealer">Group Dealer</h2>
+<h3 id="%E4%B8%80%E8%A6%A7%E5%8F%96%E5%BE%97-get-apiv1admindealer">一覧取得 [GET /api/v1/admin/dealer]</h3>
+<ul>
+<li>
+<p>Request (application/json)</p>
+<ul>
+<li>
+<p>Headers</p>
+<pre><code>  Accept: application/json
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>Response 200 (application/json)</p>
+<ul>
+<li>Attribute
+<ul>
+<li>data (array[object], fixed-type)
+<ul>
+<li>(object)
+<ul>
+<li>_id: <code>6310a421860b13248e6b9b50</code> (string) - ID</li>
+<li>code: <code>D-00000001</code> (string) - ディーラーID</li>
+<li>name: <code>Dealer 1</code> (string) - ディーラー名</li>
+<li>status: <code>finish</code> (string) - ステータス</li>
+<li>players: <code>P-00000001</code> (array) + 参加プレイヤー一覧</li>
+<li>order
+<ul>
+<li><code>P-00000001</code>: 275 (number) - 勝数</li>
+</ul>
+</li>
+<li>scorer
+<ul>
+<li><code>P-00000001</code>: 921 (number) - 得点</li>
+</ul>
+</li>
+<li>turn: 1000 (number) - 対戦数</li>
+<li>totalTurn: 1000 (number) - 総対戦数</li>
+<li>whiteWild: <code>bind_2</code> (string) - 白いワイルド</li>
+<li>dateCreated: <code>2022-09-01T12:22:57.904Z</code> (string) - 作成日時</li>
+<li>dateUpdated: <code>2022-09-01T12:41:06.694Z</code> (string) - 更新日時</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>page: 12 (number) - ページ</li>
+<li>pageSize: 1 (number) - 1 ページあたりの件数</li>
+<li>tatalItem: 20 (number) - 全データ件数</li>
+<li>tatalPage: 1 (number) - 合計ページ数</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="%E5%8F%96%E5%BE%97-get-apiv1admindealerid">取得 [GET /api/v1/admin/dealer/{id}]</h3>
+<ul>
+<li>
+<p>Request (application/json)</p>
+<ul>
+<li>
+<p>Headers</p>
+<pre><code>  Accept: application/json
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>Response 200 (application/json)</p>
+<ul>
+<li>Attribute
+<ul>
+<li>data
+<ul>
+<li>_id: <code>6310a421860b13248e6b9b50</code> (string) - ID</li>
+<li>code: <code>D-00000001</code> (string) - ディーラーID</li>
+<li>name: <code>Dealer 1</code> (string) - ディーラー名</li>
+<li>status: <code>finish</code> (string) - ステータス</li>
+<li>players: <code>P-00000001</code> (array) + 参加プレイヤー一覧</li>
+<li>order
+<ul>
+<li>P-00000001: 275 (number) - 勝数</li>
+</ul>
+</li>
+<li>scorer
+<ul>
+<li>P-00000001: 921 (number) - 得点</li>
+</ul>
+</li>
+<li>turn: 1000 (number) - 対戦数</li>
+<li>totalTurn: 1000 (number) - 総対戦数</li>
+<li>whiteWild: <code>bind_2</code> (string) - 白いワイルド</li>
+<li>dateCreated: <code>2022-09-01T12:22:57.904Z</code> (string) - 作成日時</li>
+<li>dateUpdated: <code>2022-09-01T12:41:06.694Z</code> (string) - 更新日時</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="%E6%96%B0%E8%A6%8F%E4%BD%9C%E6%88%90-post-apiv1admindealer">新規作成 [POST /api/v1/admin/dealer]</h3>
+<ul>
+<li>
+<p>Request (application/json)</p>
+<ul>
+<li>
+<p>Headers</p>
+<pre><code>  Accept: application/json
+</code></pre>
+</li>
+<li>
+<p>Attribute</p>
+<ul>
+<li>name: <code>Dealer 1</code> (string, required) - ディーラー名</li>
+<li>totalTurn: 1000 (number, required) - 総対戦数</li>
+<li>whiteWild: <code>bind_2</code> (string) - 白いワイルドの効果</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Response 200 (application/json)</p>
+<ul>
+<li>Attribute
+<ul>
+<li>data
+<ul>
+<li>dealer: <code>Dealer 1</code> (string) - ディーラー名</li>
+<li>players: `` (array) - 参加プレイヤー一覧</li>
+<li>status: <code>finish</code> (string) - ステータス</li>
+<li>totalTurn: 1000 (number) - 総対戦数</li>
+<li>whiteWild: <code>bind_2</code> (string) - 白いワイルドの効果</li>
+<li>dateCreated: <code>2022-09-01T12:22:57.904Z</code> (string) - 作成日時</li>
+<li>dateUpdated: <code>2022-09-01T12:22:57.904Z</code> (string) - 更新日時</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="%E8%A9%A6%E5%90%88%E9%96%8B%E5%A7%8B-post-apiv1admindealeridstart-dealer">試合開始 [POST /api/v1/admin/dealer/{id}/start-dealer]</h3>
+<ul>
+<li>
+<p>Request (application/json)</p>
+<ul>
+<li>
+<p>Headers</p>
+<pre><code>  Accept: application/json
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>Response 200 (application/json)</p>
+<ul>
+<li>Attribute
+<ul>
+<li>data
+<ul>
+<li>dealer: <code>Dealer 1</code> (string) + ディーラー名</li>
+<li>players: <code>P-00000001</code> (array) - 参加プレイヤー一覧</li>
+<li>status: <code>finish</code> (string) - ステータス</li>
+<li>drawDesk (array[object], fixed-type)
+<ul>
+<li>(object)
+<ul>
+<li>color: <code>red</code> (string) - 色</li>
+<li>special: <code>skip</code> (string) - 記号 ※数字があるときは記号はない。</li>
+<li>number: 6 (number) - 数字 ※記号があるときは数字はない。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>revealDesk (array[object], fixed-type)
+<ul>
+<li>(object)
+<ul>
+<li>color: <code>red</code> (string) - 色</li>
+<li>special: <code>skip</code> (string) - 記号 ※数字があるときは記号はない。</li>
+<li>number: 6 (number) - 数字 ※記号があるときは数字はない。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>turn: 1000 (number) - 対戦数</li>
+<li>totalTurn: 1000 (number) - 総対戦数</li>
+<li>firstPlayer: <code>P-00000002</code> (string) - 最初のプレイヤー</li>
+<li>beforePlayer: <code>P-00000002</code> (string) - 前のプレイヤー</li>
+<li>nextPlayer: <code>P-00000003</code> (string) - 次のプレイヤー</li>
+<li>turnRight: true (boolean) - 右回りか</li>
+<li>cardOfPlayer
+<ul>
+<li>P-00000001 (array[object], fixed-type)
+<ul>
+<li>(object)
+<ul>
+<li>color: <code>red</code> (string) - 色</li>
+<li>special: <code>skip</code> (string) - 記号 ※数字があるときは記号はない。</li>
+<li>number: 6 (number) - 数字 ※記号があるときは数字はない。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>beforeCardPlay
+<ul>
+<li>color: <code>red</code> (string) - 場に出ているカードの色</li>
+<li>special: <code>skip</code> (string) - 場に出ているカードの記号 ※数字があるときは記号はない。</li>
+<li>number: 6 (number) - 場に出ているカードの数字 ※記号があるときは数字はない。</li>
+</ul>
+</li>
+<li>cardAddOn: 2 (number) - 次のプレイヤーが引かないと行けないカードの数</li>
+<li>mustCallDrawCard: true (boolean) - draw-call イベントを強制させるか</li>
+<li>cardBeforeWildDraw4
+<ul>
+<li>color: <code>red</code> (string) - 場に出ているカードの色</li>
+<li>special: <code>skip</code> (string) - 場に出ているカードの記号 ※数字があるときは記号はない。</li>
+<li>number: 6 (number) - 場に出ているカードの数字 ※記号があるときは数字はない。</li>
+</ul>
+</li>
+<li>colorBeforeWild: <code>red</code> (string) - 色変更カードが出される前のカードの色</li>
+<li>canCallPlayDrawCard: true (boolean) - play-draw-call イベントを呼び出せるか</li>
+<li>cardBeforeDrawCard
+<ul>
+<li>color: <code>red</code> (string) - 場に出ているカードの色</li>
+<li>special: <code>skip</code> (string) - 場に出ているカードの記号 ※数字があるときは記号はない。</li>
+<li>number: 6 (number) - 場に出ているカードの数字 ※記号があるときは数字はない。</li>
+</ul>
+</li>
+<li>whiteWild: <code>bind_2</code> (string) - 白いワイルドの効果</li>
+<li>activationWhiteWild
+<ul>
+<li><code>P-00000001</code>: 0 (number) - プレイヤーごとの bind_2 の効果を受ける残回数</li>
+</ul>
+</li>
+<li>order
+<ul>
+<li><code>P-00000001</code>: 0 (number) - 勝数</li>
+</ul>
+</li>
+<li>score
+<ul>
+<li><code>P-00000001</code>: 0 (number) - 得点</li>
+</ul>
+</li>
+<li>yellUno
+<ul>
+<li><code>P-00000001</code>: false (boolean) - UNO コールをしたか</li>
+</ul>
+</li>
+<li>timeout
+<ul>
+<li><code>P-00000001</code>: false (boolean) - タイムアウトしているか</li>
+</ul>
+</li>
+<li>isSkip: true (boolean) - 次のプレイヤーをスキップするか</li>
+<li>numberTurnPlay: 1 (number) - 1 対戦中のターン数</li>
+<li>numberCardPlay: 1 (number) - 1 対戦中に場に出たカードの数</li>
+<li>noPlayCount: 0 (number) - 場に動きがなくなってから経過したターン数</li>
+<li>specialLogic
+<ul>
+<li>P-00000001: 0 (number) - スペシャルロジック発動回数</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="%E5%89%8A%E9%99%A4-delete-apiv1admindealerid">削除 [DELETE /api/v1/admin/dealer/{id}]</h3>
+<ul>
+<li>
+<p>Request (application/json)</p>
+<ul>
+<li>
+<p>Headers</p>
+<pre><code>  Accept: application/json
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>Response 200 (application/json)</p>
+<ul>
+<li>Attribute
+<ul>
+<li>data
+<ul>
+<li>message: <code>Common delete success.</code> (string) - メッセージ</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="group-player">Group Player</h2>
+<h3 id="%E4%B8%80%E8%A6%A7%E5%8F%96%E5%BE%97-get-apiv1adminplayer">一覧取得 [GET /api/v1/admin/player]</h3>
+<ul>
+<li>
+<p>Request (application/json)</p>
+<ul>
+<li>
+<p>Headers</p>
+<pre><code>  Accept: application/json
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>Response 200 (application/json)</p>
+<ul>
+<li>Attribute
+<ul>
+<li>_id: <code>633edb1a5f25f90061ba8900</code> - ID</li>
+<li>code: <code>D-00000001</code> (string) - ディーラーID</li>
+<li>name: <code>Player 1</code> (string) - プレイヤー名</li>
+<li>team: <code>team A</code> (string) - チーム名</li>
+<li>score
+<ul>
+<li><code>Dealer 200</code>: 23 (array) - 対戦ごとの得点</li>
+</ul>
+</li>
+<li>dateCreated: <code>2022-10-06T13:41:46.006Z</code> - 作成日時</li>
+<li>dateUpdated: <code>2022-10-06T18:29:36.743Z</code> - 更新日時</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</body>
+</html>

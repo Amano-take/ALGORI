@@ -1,0 +1,194 @@
+player0: ['red:8', 'red:+2', 'red:reverse', 'green:5', 'green:+2', 'blue:3', 'wild:all']
+player1: ['red:3', 'red:6', 'yellow:2', 'green:2', 'green:+2', 'green:skip', 'blue:6']
+player2: ['red:4', 'red:9', 'yellow:1', 'yellow:skip', 'blue:8', 'wild:+4', 'wild:all']
+player3: ['yellow:+2', 'yellow:+2', 'green:1', 'green:7', 'blue:3', 'blue:9', 'wild:+4']
+start game
+player3: ['yellow:+2', 'yellow:+2', 'green:1', 'green:7', 'blue:3', 'blue:9', 'wild:+4']
+player3: submit yellow:+2 to empty
+player0 get 2 cards
+-----
+player1: ['red:3', 'red:6', 'yellow:2', 'green:2', 'green:+2', 'green:skip', 'blue:6']
+yellow:+2 yellow on desk
+player1: submit yellow:2 to yellow:+2
+-----
+player2: ['red:4', 'red:9', 'yellow:1', 'yellow:skip', 'blue:8', 'wild:+4', 'wild:all']
+yellow:2 yellow on desk
+player2: submit yellow:1 to yellow:2
+-----
+player3: ['yellow:+2', 'green:1', 'green:7', 'blue:3', 'blue:9', 'wild:+4']
+yellow:1 yellow on desk
+player3: submit yellow:+2 to yellow:1
+player0 get 2 cards
+-----
+player1: ['red:3', 'red:6', 'green:2', 'green:+2', 'green:skip', 'blue:6']
+yellow:+2 yellow on desk
+player1: submit green:+2 to yellow:+2
+player2 get 2 cards
+-----
+player3: ['green:1', 'green:7', 'blue:3', 'blue:9', 'wild:+4']
+green:+2 green on desk
+player3: submit green:1 to green:+2
+-----
+player0: ['red:8', 'red:+2', 'red:reverse', 'yellow:6', 'yellow:7', 'green:5', 'green:6', 'green:+2', 'green:skip', 'blue:3', 'wild:all']
+green:1 green on desk
+player0: submit green:5 to green:1
+-----
+player1: ['red:3', 'red:6', 'green:2', 'green:skip', 'blue:6']
+green:5 green on desk
+player1: submit green:2 to green:5
+-----
+player2: ['red:4', 'red:9', 'yellow:3', 'yellow:5', 'yellow:skip', 'blue:8', 'wild:+4', 'wild:all']
+green:2 green on desk
+player2: submit wild:+4 to green:2
+player3 get 4 cards
+-----
+player0: ['red:8', 'red:+2', 'red:reverse', 'yellow:6', 'yellow:7', 'green:6', 'green:+2', 'green:skip', 'blue:3', 'wild:all']
+wild:+4 blue on desk
+player0: submit blue:3 to wild:+4
+-----
+player1: ['red:3', 'red:6', 'green:skip', 'blue:6']
+blue:3 blue on desk
+player1: submit red:3 to blue:3
+-----
+player2: ['red:4', 'red:9', 'yellow:3', 'yellow:5', 'yellow:skip', 'blue:8', 'wild:all']
+red:3 red on desk
+player2: submit red:4 to red:3
+-----
+player3: ['red:5', 'yellow:6', 'green:7', 'blue:3', 'blue:5', 'blue:9', 'wild:+4', 'wild:skipbind2']
+red:4 red on desk
+player3: submit red:5 to red:4
+-----
+player0: ['red:8', 'red:+2', 'red:reverse', 'yellow:6', 'yellow:7', 'green:6', 'green:+2', 'green:skip', 'wild:all']
+red:5 red on desk
+player0: submit red:8 to red:5
+-----
+player1: ['red:6', 'green:skip', 'blue:6']
+red:8 red on desk
+player1: submit red:6 to red:8
+-----
+player2: ['red:9', 'yellow:3', 'yellow:5', 'yellow:skip', 'blue:8', 'wild:all']
+red:6 red on desk
+player2: submit red:9 to red:6
+-----
+player3: ['yellow:6', 'green:7', 'blue:3', 'blue:5', 'blue:9', 'wild:+4', 'wild:skipbind2']
+red:9 red on desk
+player3: submit blue:9 to red:9
+-----
+player0: ['red:+2', 'red:reverse', 'yellow:6', 'yellow:7', 'green:6', 'green:+2', 'green:skip', 'wild:all']
+blue:9 blue on desk
+player0: submit wild:all to blue:9
+-----
+player1: ['green:skip', 'blue:6']
+wild:all yellow on desk
+player1: pass
+player1get green:0
+-----
+player2: ['yellow:3', 'yellow:5', 'yellow:skip', 'blue:8', 'wild:all']
+wild:all yellow on desk
+player2: submit yellow:3 to wild:all
+-----
+player3: ['yellow:6', 'green:7', 'blue:3', 'blue:5', 'wild:+4', 'wild:skipbind2']
+yellow:3 yellow on desk
+player3: submit yellow:6 to yellow:3
+-----
+player0: ['red:+2', 'red:reverse', 'yellow:6', 'yellow:7', 'green:6', 'green:+2', 'green:skip']
+yellow:6 yellow on desk
+player0: submit yellow:6 to yellow:6
+-----
+player1: ['green:0', 'green:skip', 'blue:6']
+yellow:6 yellow on desk
+player1: submit blue:6 to yellow:6
+-----
+player2: ['yellow:5', 'yellow:skip', 'blue:8', 'wild:all']
+blue:6 blue on desk
+player2: submit blue:8 to blue:6
+-----
+player3: ['green:7', 'blue:3', 'blue:5', 'wild:+4', 'wild:skipbind2']
+blue:8 blue on desk
+player3: submit blue:3 to blue:8
+-----
+player0: ['red:+2', 'red:reverse', 'yellow:7', 'green:6', 'green:+2', 'green:skip']
+blue:3 blue on desk
+player0: pass
+player0get green:reverse
+-----
+player1: ['green:0', 'green:skip']
+blue:3 blue on desk
+player1: pass
+player1get blue:reverse
+player1: submit blue:reverse to blue:3
+turn reversed
+-----
+player0: ['red:+2', 'red:reverse', 'yellow:7', 'green:6', 'green:+2', 'green:skip', 'green:reverse']
+blue:reverse blue on desk
+player0: submit red:reverse to blue:reverse
+turn reversed
+-----
+player1: ['green:0', 'green:skip']
+red:reverse red on desk
+player1: pass
+player1get red:7
+player1: submit red:7 to red:reverse
+-----
+player2: ['yellow:5', 'yellow:skip', 'wild:all']
+red:7 red on desk
+player2: submit wild:all to red:7
+-----
+player3: ['green:7', 'blue:5', 'wild:+4', 'wild:skipbind2']
+wild:all green on desk
+player3: submit green:7 to wild:all
+-----
+player0: ['red:+2', 'yellow:7', 'green:6', 'green:+2', 'green:skip', 'green:reverse']
+green:7 green on desk
+player0: submit yellow:7 to green:7
+-----
+player1: ['green:0', 'green:skip']
+yellow:7 yellow on desk
+player1: pass
+player1get green:3
+-----
+player2: ['yellow:5', 'yellow:skip']
+yellow:7 yellow on desk
+player2: submit yellow:5 to yellow:7
+-----
+player3: ['blue:5', 'wild:+4', 'wild:skipbind2']
+yellow:5 yellow on desk
+player3: submit blue:5 to yellow:5
+-----
+player0: ['red:+2', 'green:6', 'green:+2', 'green:skip', 'green:reverse']
+blue:5 blue on desk
+player0: pass
+player0get red:+2
+-----
+player1: ['green:0', 'green:3', 'green:skip']
+blue:5 blue on desk
+player1: pass
+player1get yellow:8
+-----
+player2: ['yellow:skip']
+blue:5 blue on desk
+player2: pass
+player2get blue:8
+player2: submit blue:8 to blue:5
+-----
+player3: ['wild:+4', 'wild:skipbind2']
+blue:8 blue on desk
+player3: submit wild:+4 to blue:8
+player0 get 4 cards
+-----
+player1: ['yellow:8', 'green:0', 'green:3', 'green:skip']
+wild:+4 green on desk
+player1: submit green:0 to wild:+4
+-----
+player2: ['yellow:skip']
+green:0 green on desk
+player2: pass
+player2get yellow:reverse
+-----
+player3: ['wild:skipbind2']
+green:0 green on desk
+player3: submit wild:skipbind2 to green:0
+player0 is skipped and player1 is binded for 2
+-----
+Winner is player3
+final score is: [-166  -31  -40  237]
