@@ -1,0 +1,5 @@
+2023-12-17 18:04:44:953: [INFO] - Start ALGORI system.
+2023-12-17 18:04:44:954: [INFO] - Init sequenceService.
+2023-12-17 18:04:44:959: [INFO] - Init commonService.
+2023-12-17 18:04:46:114: [INFO] - Create record of dealer sequnece.
+2023-12-17 18:04:46:124: [INFO] - Create record of player sequnece.
