@@ -136,6 +136,12 @@ class ProbabilityModel:
     def i_submit_card(self, card: int):
         self.trash.append(card)
 
+    def other_player_get_card_until_num(self, my_card, card_nums:list[int]):
+        for i in range(1, 4):
+            draw = card_nums[i] - self.have_num_card[i-1]
+            self.other_player_get_card(i, my_card, draw)
+        assert self.have_num_card == card_nums[1:]
+
     def other_player_get_card(self, pid: int, my_card, card_num):
         restcount = self.uinideck - self.cardcount
         num_rest_Card = np.sum(restcount)
@@ -205,6 +211,21 @@ class ProbabilityModel:
         self.cardcount[self.trash[0]] += 1
         self.sum_cardcount = np.sum(my_card) + 1
         self.drawcount = np.repeat(0, repeats=3).astype(np.int8)
+
+    def improved_shuffle(self, pre_my_card, af_my_card, number_card_of_player:list[int]):
+        for i in range(1, 4):
+            self.have_num_card[i-1] = number_card_of_player[i]
+
+        self._shuffle_average()
+        diff = af_my_card - pre_my_card
+        bef = np.where(diff < 0, -diff, 0)
+        self.cardcount -= bef
+        self.sum_cardcount -= np.sum(bef)
+        af = np.where(diff > 0, diff, 0)
+        stuck_af = np.repeat(self.arange, af)
+        self._shuffle_distribute_bef(self.have_num_card, bef)
+        self.i_get_card(stuck_af)
+        
 
     def shuffle(self, pid: int, pre_my_card, af_my_card, reverse):
         """
