@@ -27,7 +27,7 @@ class Card:
         self.num = number
 
     @classmethod
-    def _from_str(cls, cardict:dict):
+    def _from_str(cls, cardict: dict):
         number = 0
         color = cardict["color"]
         if color == "yellow":
@@ -54,16 +54,16 @@ class Card:
             elif var == "reverse":
                 number += 12
             elif var == "wild_draw_4":
-                number = 52 
+                number = 52
             elif var == "white_wild":
                 number = 55
             elif var == "wild_shuffle":
                 number = 54
             elif var == "wild":
                 number = 53
-        
+
         return number
-    
+
     @classmethod
     def _to_str(cls, number):
         ans = ddict(str)
@@ -75,7 +75,7 @@ class Card:
             if var < 10:
                 ans["number"] = var
             else:
-                vars = ["+2", "skip", "reverse"]
+                vars = ["draw_2", "skip", "reverse"]
                 ans["special"] = vars[var - 10]
         elif color == 4:
             if var == 0:
@@ -139,6 +139,8 @@ class Card:
 
     def getnumber(self):
         return int(self.num)
+
+
 class Ruler:
     def __init__(self) -> None:
         # 場のカードc1に対してc2が出せるなら1, 出せないなら0
@@ -219,43 +221,56 @@ class Ruler:
 
     def getscore(self) -> np.ndarray[int]:
         return self.score
+
+
 class Master:
     player_num = 4
     card_plus_two = set([10, 23, 36, 49])
     card_skip = set([11, 24, 37, 50])
     card_reverse = set([12, 25, 38, 51])
     card_plus_four = set([52])
+    card_wild = set([53])
     card_shuffle = set([54])
     card_skipbind2 = set([55])
 
-
-    def __init__(self, logobject:logging.Logger) -> None:
+    def __init__(self, logobject: logging.Logger) -> None:
         self.logger = logobject
         self.level = logobject.level
         self.num2Card = np.frompyfunc(lambda x: Card(x), 1, 1)
 
-    #自分を０として本来の順序順に1, 2, 3
-    def set_board(self, deck:np.ndarray[Card], reverse:int, my_deck:np.ndarray[int], other_decks:np.ndarray[np.ndarray[int]], trash:list, action, color, desk, player_rest) -> np.ndarray[np.int16]:
-        #モンテカルロなのでplayerはランダムプレイ
+    # 自分を０として本来の順序順に1, 2, 3
+    def set_board(
+        self,
+        deck: np.ndarray[Card],
+        reverse: int,
+        my_deck: np.ndarray[int],
+        other_decks: np.ndarray[np.ndarray[int]],
+        trash: list,
+        action,
+        color,
+        desk,
+        player_rest,
+    ) -> np.ndarray[np.int16]:
+        # モンテカルロなのでplayerはランダムプレイ
         self.players = [RandomPlayer() for _ in range(Master.player_num)]
         self.turn = 0
         self.desk = desk
         self.deck = deck.copy()
-        self.trash=trash.copy()
+        self.trash = trash.copy()
         self.turn_plus = reverse
         self.player_rest = player_rest
         self.desk_color = color
-        #playerにカードを渡す。
+        # playerにカードを渡す。
         self.players[0].Cards = my_deck.copy()
         self.players[0].num_cards = len(my_deck)
         for i in range(1, 4):
-            self.players[i].get_card(other_decks[i-1])
-        
-        #actionの処理を行って、次の人に回してからシミュレーションスタート
+            self.players[i].get_card(other_decks[i - 1])
+
+        # actionの処理を行って、次の人に回してからシミュレーションスタート
         self.deal_action_color(action, color)
         self.next_turn()
         return self.game_start()
-    
+
     def set_and_game(self):
         self.players = [Player() for _ in range(Master.player_num)]
         self.init_turn()
@@ -268,76 +283,93 @@ class Master:
         self.show_all_players_cards()
         self.logger.debug("start game")
         self.game_start()
-        
+
     def game_start(self):
         show_flag = self.level <= logging.DEBUG
         while not self.is_game_finished():
-            #手札を表示するかどうか
+            # 手札を表示するかどうか
             if show_flag:
                 self.show_player_cards(self.turn)
                 if self.desk_color is not None:
-                    self.logger.debug(str(Card(self.desk)) + " " + str(Player.colors[(self.desk_color)]) + " on desk")
-            #rest確認後、ターンを渡す
+                    self.logger.debug(
+                        str(Card(self.desk))
+                        + " "
+                        + str(Player.colors[(self.desk_color)])
+                        + " on desk"
+                    )
+            # rest確認後、ターンを渡す
             if self.player_rest[self.turn] == 0:
                 action, color = self.give_turn(self.turn, self.desk, self.desk_color)
-            #パスを強制しrestを一つ減らす。
+            # パスを強制しrestを一つ減らす。
             else:
                 self.player_rest[self.turn] -= 1
-                self.logger.debug("player" + str(self.turn) + " is binded so skip this turn. reminer is " + str(self.player_rest[self.turn]))
+                self.logger.debug(
+                    "player"
+                    + str(self.turn)
+                    + " is binded so skip this turn. reminer is "
+                    + str(self.player_rest[self.turn])
+                )
                 action, color = -1, None
-                
 
-            #カードが出る場合
+            # カードが出る場合
             if action >= 0:
                 self.deal_action_color(action, color, show_flag)
-            #出ない場合
+            # 出ない場合
             else:
-                self.logger.debug("player"+str(self.turn)+ ": pass")
+                self.logger.debug("player" + str(self.turn) + ": pass")
                 cs = self.give_cards(self.turn)
                 self.logger.debug("player" + str(self.turn) + "get " + str(Card(cs[0])))
-                action, color = self.give_turn_after_pass(self.turn, self.desk, self.desk_color, cs)
+                action, color = self.give_turn_after_pass(
+                    self.turn, self.desk, self.desk_color, cs
+                )
                 if action >= 0:
                     self.deal_action_color(action, color, show_flag)
 
-            
             self.next_turn()
             self.logger.debug("-----")
-        
-        self.logger.debug("Winner is player"+str(self.winner()))
+
+        self.logger.debug("Winner is player" + str(self.winner()))
         scores = self.calc_scores(self.winner())
-        self.logger.debug("final score is: "+ str(scores))
+        self.logger.debug("final score is: " + str(scores))
         return scores
-    
-    #numba化したいがselfを引数に取れないので、なかなか難しい
+
+    # numba化したいがselfを引数に取れないので、なかなか難しい
     def deal_action_color(self, action, color, show_flag=False):
-        self.logger.debug("player"+ str(self.turn)+ ": submit "+str(Card(action))+ " to "+ str(Card(self.desk)))
+        self.logger.debug(
+            "player"
+            + str(self.turn)
+            + ": submit "
+            + str(Card(action))
+            + " to "
+            + str(Card(self.desk))
+        )
         self.desk = action
-        #actionがワイルドカードでない場合
+        # actionがワイルドカードでない場合
         if action <= 51:
             self.desk_color = action // 13
-        #skipbind2の場合色を引き継ぐ
+        # skipbind2の場合色を引き継ぐ
         elif action == 55:
             self.desk_color = self.desk_color
-        #その他wildカラーの場合、playerの宣言色に染まる
+        # その他wildカラーの場合、playerの宣言色に染まる
         else:
             self.desk_color = color
 
-        #deskcolor以外の処理
+        # deskcolor以外の処理
         if action in Master.card_plus_two:
             self.next_turn()
             self.give_cards(self.turn, 2)
-            self.logger.debug("player"+ str(self.turn)+ " get 2 cards")
-            #self.show_player_cards(self.turn)
+            self.logger.debug("player" + str(self.turn) + " get 2 cards")
+            # self.show_player_cards(self.turn)
         elif action in Master.card_skip:
             self.next_turn()
-            self.logger.debug("player"+str(self.turn)+" is skipped")
+            self.logger.debug("player" + str(self.turn) + " is skipped")
         elif action in Master.card_reverse:
             self.reverse_turn()
             self.logger.debug("turn reversed")
         elif action in Master.card_plus_four:
             self.next_turn()
             self.give_cards(self.turn, 4)
-            self.logger.debug("player"+str(self.turn)+ " get 4 cards")
+            self.logger.debug("player" + str(self.turn) + " get 4 cards")
             # self.show_player_cards(self.turn)
         elif action in Master.card_shuffle:
             self.shuffle()
@@ -346,12 +378,18 @@ class Master:
         elif action in Master.card_skipbind2:
             self.next_turn()
             self.player_rest[(self.turn + 1) % 4] += 2
-            self.logger.debug("player"+str(self.turn)+" is skipped and player" + str((self.turn + 1) % 4) + " is binded for 2")
-        #配ろうとしたのちにtrashに加える.
+            self.logger.debug(
+                "player"
+                + str(self.turn)
+                + " is skipped and player"
+                + str((self.turn + 1) % 4)
+                + " is binded for 2"
+            )
+        # 配ろうとしたのちにtrashに加える.
         self.trash.append(action)
 
-    #カード関係
-    def give_cards(self, pid:int, num=1):
+    # カード関係
+    def give_cards(self, pid: int, num=1):
         """
         pidの人にnum枚挙げる
         """
@@ -360,14 +398,14 @@ class Master:
             self.players[pid].get_card(cs)
             return cs
         except:
-            #山札が足りなくなったら、
+            # 山札が足りなくなったら、
             self.deck = np.hstack((self.deck, self.trash))
             np.random.shuffle(self.deck)
             self.trash = []
             cs = self.get_card_from_deck(num)
             self.players[pid].get_card(cs)
             return cs
-        
+
     def get_num_of_player_card(self):
         """
         プレイヤーのカードの枚数を取得
@@ -376,14 +414,14 @@ class Master:
         for i in range(4):
             ans_num[i] = self.players[i].number_of_cards()
         return ans_num
-    
+
     def get_cards_of_all_player(self):
-        #player型カード表現
+        # player型カード表現
         ans_card = np.zeros(Card.VARIATION, dtype=np.int8)
         for i in range(4):
             ans_card += self.players[i].give_all_my_cards()
 
-        #master型カード表現へと変更
+        # master型カード表現へと変更
         ara = np.arange(Card.VARIATION, dtype=np.int8)
         return np.repeat(ara, ans_card)
 
@@ -397,34 +435,32 @@ class Master:
         basis = len(all_card) // 4
         rest = len(all_card) % 4
         for i in range(rest):
-            self.players[(self.turn+1+i)%4].get_card(all_card[i:i+1])
+            self.players[(self.turn + 1 + i) % 4].get_card(all_card[i : i + 1])
         for i in range(4):
-            self.players[i].get_card(all_card[rest+basis*i:rest+basis*(i+1)])
+            self.players[i].get_card(
+                all_card[rest + basis * i : rest + basis * (i + 1)]
+            )
         return
 
     def winner(self):
         for i in range(Master.player_num):
             if self.players[i].number_of_cards() == 0:
                 return i
-            
-    
-            
+
     def show_trash(self):
         ans = []
         for c in self.trash:
             ans.append(str(c))
         return str(ans)
-    
+
     def get_trash(self):
         return self.trash
-    
 
-    def give_turn(self, pid:int, c:int, color:int):
+    def give_turn(self, pid: int, c: int, color: int):
         return self.players[pid].get_turn(c, color)
-    
-    def give_turn_after_pass(self, pid:int, c:int, color:int, cs:np.ndarray[int]):
-        return self.players[pid].get_turn_after_pass(c, color, cs)
 
+    def give_turn_after_pass(self, pid: int, c: int, color: int, cs: np.ndarray[int]):
+        return self.players[pid].get_turn_after_pass(c, color, cs)
 
     def is_game_finished(self):
         for i in range(Master.player_num):
@@ -438,32 +474,33 @@ class Master:
             ans.append(str(Card(c)))
         return str(ans)
 
-    def show_player_cards(self, pid:int):
-        self.logger.debug("player" + str(pid) + ": " + str(self.players[pid].show_my_cards()))
+    def show_player_cards(self, pid: int):
+        self.logger.debug(
+            "player" + str(pid) + ": " + str(self.players[pid].show_my_cards())
+        )
 
     def show_all_players_cards(self):
-        
         for i in range(Master.player_num):
             self.show_player_cards(i)
-    
-    def calc_scores(self, winner:int):
+
+    def calc_scores(self, winner: int):
         """
         scoreを算出。ゲームが終わってない場合は未定義動作。err出すようにするべきか？？
         winnerを出した方が早い
         """
         ans = np.zeros(4)
         for i in range(4):
-            if i !=winner:
-                ans[i] =  - self.players[i].my_score()
-        ans[winner] = - sum(ans)
+            if i != winner:
+                ans[i] = -self.players[i].my_score()
+        ans[winner] = -sum(ans)
         return ans.astype(np.int16)
-    
+
     def init_turn(self):
         """
         turnを初期化
         """
         self.turn = np.random.randint(0, Master.player_num)
-        #self.turn = 0
+        # self.turn = 0
         self.turn_plus = 1
 
     def next_turn(self):
@@ -472,7 +509,7 @@ class Master:
         """
         self.turn += self.turn_plus
         self.turn %= 4
-    
+
     def reverse_turn(self):
         """
         turnをreverse
@@ -485,45 +522,47 @@ class Master:
         """
         if len(self.deck) < n:
             raise ValueError("the number of the cards of deck is lack for drawing....")
-        #ここ結構早いです
+        # ここ結構早いです
         ans = self.deck[0:n]
         self.deck = self.deck[n:]
         return ans
 
     def init_deck(self) -> np.ndarray[int]:
-        #self.deck : np.ndarray[int]
-        #ランダムシャフルする
+        # self.deck : np.ndarray[int]
+        # ランダムシャフルする
         cards = np.zeros(Card.VARIATION * 2, dtype=np.int8)
         index = 0
         for i in range(Card.VARIATION):
             c = i // 13
             v = i % 13
-            #not wild
+            # not wild
             if c < 4 and v == 0:
                 cards[index] = i
                 index += 1
             elif c < 4:
                 cards[index] = i
-                cards[index+1] = i
+                cards[index + 1] = i
                 index += 2
-            #wild
+            # wild
             else:
-                #shuffle
+                # shuffle
                 if v == 2:
                     cards[index] = i
                     index += 1
-                #skipbind2
+                # skipbind2
                 elif v == 3:
                     for _ in range(3):
                         cards[index] = i
                         index += 1
-                #+4, all
+                # +4, all
                 else:
                     for _ in range(4):
                         cards[index] = i
                         index += 1
         np.random.shuffle(cards)
         return cards
+
+
 class ProbabilityModel:
     one = [0, 13, 26, 39, 54]
     three = [55]
@@ -598,11 +637,12 @@ class ProbabilityModel:
         restcount -= len(self.trash)
         restcount -= np.sum(mycard)
         restcount -= np.sum(self.have_num_card)
-        assert restcount == np.sum(self.inideckcount - self.cardcount) - np.sum(self.have_num_card)
-        
+        assert restcount == np.sum(self.inideckcount - self.cardcount) - np.sum(
+            self.have_num_card
+        )
+
         if restcount < 0:
             self.trash_clean(mycard)
-
 
     def i_get_card(self, Cards: np.ndarray[int], deck_num=Card.VARIATION * 2):
         while self.lock:
@@ -631,8 +671,12 @@ class ProbabilityModel:
             multiple2 = (card_num - r - j + 1) / (
                 deck_num - self.have_num_card[pid - 1] - self.sum_cardcount + 1
             )
-            if (card_num - r + 1) == 0 or deck_num - self.have_num_card[pid - 1] - self.sum_cardcount + 1 == 0:
-                print(deck_num, self.have_num_card[pid - 1], self.sum_cardcount, r, card)
+            if (card_num - r + 1) == 0 or deck_num - self.have_num_card[
+                pid - 1
+            ] - self.sum_cardcount + 1 == 0:
+                print(
+                    deck_num, self.have_num_card[pid - 1], self.sum_cardcount, r, card
+                )
                 print(multiple1, multiple2)
                 raise ValueError("Stop IT")
 
@@ -654,9 +698,9 @@ class ProbabilityModel:
     def i_submit_card(self, card: int):
         self.trash.append(card)
 
-    def other_player_get_card_until_num(self, my_card, card_nums:list[int]):
+    def other_player_get_card_until_num(self, my_card, card_nums: list[int]):
         for i in range(1, 4):
-            draw = card_nums[i] - self.have_num_card[i-1]
+            draw = card_nums[i] - self.have_num_card[i - 1]
             assert draw >= 0
             if draw == 0:
                 continue
@@ -664,14 +708,13 @@ class ProbabilityModel:
         assert np.all(self.have_num_card == card_nums[1:])
 
     def other_player_get_card(self, pid: int, my_card, card_num):
-        #HACK: もっといい処理はないか？
+        # HACK: もっといい処理はないか？
         while self.lock:
             time.sleep(0.01)
         self.lock = True
         restcount = self.inideckcount - self.cardcount
         num_rest_Card = np.sum(restcount)
         draw = min(num_rest_Card - np.sum(self.have_num_card), card_num)
-        
 
         # 山札からある分からdraw枚数だけdraw
         for i in range(0, Card.VARIATION):
@@ -739,9 +782,14 @@ class ProbabilityModel:
         self.sum_cardcount = np.sum(my_card) + 1
         self.drawcount = np.repeat(0, repeats=3).astype(np.int8)
 
-    def improved_shuffle(self, pre_my_card, af_my_card, number_card_of_player:list[int]):
+    def improved_shuffle(
+        self, pre_my_card, af_my_card, number_card_of_player: list[int]
+    ):
+        while self.lock:
+            time.sleep(0.01)
+        self.lock = True
         for i in range(1, 4):
-            self.have_num_card[i-1] = number_card_of_player[i]
+            self.have_num_card[i - 1] = number_card_of_player[i]
 
         self._shuffle_average()
         diff = af_my_card - pre_my_card
@@ -751,6 +799,7 @@ class ProbabilityModel:
         af = np.where(diff > 0, diff, 0)
         stuck_af = np.repeat(self.arange, af)
         self._shuffle_distribute_bef(self.have_num_card, bef)
+        self.lock = False
         self.i_get_card(stuck_af)
 
     def shuffle(self, pid: int, pre_my_card, af_my_card, reverse):
@@ -789,7 +838,7 @@ class ProbabilityModel:
                 self.plpb[i - 1][card] = temp / np.sum(temp)
 
     def _shuffle_average(self):
-        #FIXME: ここで平均を取るのは正しいのか？枚数を考慮していない
+        # FIXME: ここで平均を取るのは正しいのか？枚数を考慮していない
         average = np.sum(self.plpb, axis=0) / 3
         for i in range(3):
             self.plpb[i] = np.copy(average)
@@ -800,7 +849,7 @@ class ProbabilityModel:
         total = mynum + other_num
         rest = total % 4
         basic = total // 4
-        
+
         self.have_num_card = np.repeat(basic, 3).astype(np.int8)
         for i in range(1, rest + 1):
             if (pid + reverse * i) % 4 >= 1:
@@ -808,7 +857,7 @@ class ProbabilityModel:
         return total
 
     def other_player_pass(self, pid: int, desk: int, color: int):
-        #FIXME: 二枚持っているのにパスする可能性がある
+        # FIXME: 二枚持っているのにパスする可能性がある
         self.plpb[pid - 1][
             np.where(ProbabilityModel.rule.canSubmit_byint(desk, color) == 1)[0]
         ] = np.array([1 - ProbabilityModel.alpha, ProbabilityModel.alpha, 0, 0, 0])
@@ -890,23 +939,26 @@ class ProbabilityModel:
 
         return no_name
 
+
 class Player:
     rule = Ruler()
     colors = ["red", "yellow", "green", "blue"]
+
     def __init__(self) -> None:
         self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
         self.get_num = np.frompyfunc(Card.getnumber, 1, 1)
         self.logging = logging.getLogger("player")
         self.logging.setLevel(logging.WARN)
-        
 
-    def get_card(self, c:np.ndarray[int]):
+    def get_card(self, c: np.ndarray[int]):
         self.num_cards = self.__get_card(self.Cards, c, self.num_cards, Card.VARIATION)
-    
+
     @staticmethod
-    @njit(cache = True)
-    def __get_card(Cards:np.ndarray[np.int8], c:np.ndarray[np.int8], num_cards:int, VAR):
+    @njit(cache=True)
+    def __get_card(
+        Cards: np.ndarray[np.int8], c: np.ndarray[np.int8], num_cards: int, VAR
+    ):
         if len(c) != VAR:
             num_cards += len(c)
             for i in c:
@@ -915,24 +967,23 @@ class Player:
             Cards += c
             num_cards += np.sum(c)
         return num_cards
-    
-    
+
     def give_all_my_cards(self):
         self.num_cards = 0
         ans = self.Cards.copy()
         self.Cards -= self.Cards
         return ans
-    
+
     @staticmethod
-    @njit(cache = True)
-    def __strategy(cs:np.ndarray[np.int8]):
+    @njit(cache=True)
+    def __strategy(cs: np.ndarray[np.int8]):
         i = np.where(cs > 0)[0][0]
         if i >= 52 and i != 55:
             c = np.random.randint(4)
         else:
             c = -1
         return i, c
-    
+
     def strategy(self, cs):
         i, c = self.__strategy(cs)
         if i >= 52 and i != 55:
@@ -941,23 +992,23 @@ class Player:
             c = None
         return i, c
 
-    def get_turn(self, c:int, color, trash=None, turn_plus = 1):
+    def get_turn(self, c: int, color, trash=None, turn_plus=1):
         cs = self.__get_turn(self.Cards, Player.rule.canSubmit_byint(c, color))
         if self.__all(cs):
             return -1, None
-        
-        #submit
+
+        # submit
         i, c = self.strategy(cs)
         self.num_cards, flag = self.__i_and_c(i, self.num_cards, self.Cards)
         if flag:
             self.logging.info("UNO!!")
         return i, c
-    
-    def get_turn_after_pass(self, c:int, color:int, get_card:np.ndarray[np.int8]):
+
+    def get_turn_after_pass(self, c: int, color: int, get_card: np.ndarray[np.int8]):
         get_card = get_card[0]
         if Player.rule.canSubmit_byint(c, color)[get_card] == 0:
             return -1, None
-        
+
         else:
             cs = np.zeros(Card.VARIATION, dtype=np.int8)
             cs[get_card] = 1
@@ -966,25 +1017,24 @@ class Player:
             if flag:
                 self.logging.info("UNO!!")
             return i, c
-    
-    @staticmethod
-    @njit(cache = True)
-    def __get_turn(Cards:np.ndarray[np.int8], rulearray:np.ndarray[np.int8]):
-        cs = rulearray * Cards
-        return cs
-        
-    @staticmethod
-    @njit(cache = True)
-    def __all(cs:np.ndarray[np.int8]):
-        return np.all(cs==0)
 
     @staticmethod
-    @njit(cache = True)
+    @njit(cache=True)
+    def __get_turn(Cards: np.ndarray[np.int8], rulearray: np.ndarray[np.int8]):
+        cs = rulearray * Cards
+        return cs
+
+    @staticmethod
+    @njit(cache=True)
+    def __all(cs: np.ndarray[np.int8]):
+        return np.all(cs == 0)
+
+    @staticmethod
+    @njit(cache=True)
     def __i_and_c(i, restnum, Cards):
         Cards[i] -= 1
         restnum -= 1
         return restnum, restnum == 1
-
 
     def show_my_cards(self):
         ans = []
@@ -993,8 +1043,8 @@ class Player:
                 t = Card(c)
                 ans.append(t.__str__())
         return ans
-    
-    def show_cards(self, cs:np.ndarray[Card]):
+
+    def show_cards(self, cs: np.ndarray[Card]):
         ans = []
         for c in enumerate(cs):
             ans.append(c.__str__())
@@ -1002,12 +1052,13 @@ class Player:
 
     def number_of_cards(self):
         return self.num_cards
-    
+
     def my_score(self):
         if self.num_cards == 0:
             return 0
         else:
             return np.sum(self.Cards * Player.rule.getscore())
+
 
 class RandomPlayer(Player):
     def strategy(self, cs):
@@ -1017,124 +1068,166 @@ class RandomPlayer(Player):
         else:
             c = None
         return i, c
-    
+
     @staticmethod
-    @njit(cache = True)
-    def __strategy(cs:np.ndarray[np.int8]):
+    @njit(cache=True)
+    def __strategy(cs: np.ndarray[np.int8]):
         i = np.random.choice(np.where(cs > 0)[0], size=1)[0]
         if i >= 52 and i != 55:
             c = np.random.randint(4)
         else:
             c = -1
         return i, c
+
+
 class RPlayer:
     rule = Ruler()
     colors = ["red", "yellow", "green", "blue"]
+    """
+    self.desk_color: wildの場合は宣言された色、それ以外はそのカードの色
+    self.force_draw: +2の場合は2、+4の場合は4、それ以外は0
+
+    
+    """
 
     def __init__(self) -> None:
+        file_handler = logging.FileHandler("player.log")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        self.logger = logging.getLogger(__name__)
+        # self.logger.setLevel(logging.DEBUG)
+        self.logger.addHandler(file_handler)
+
+        # RESET
+        self.plpb = ProbabilityModel()
+        self.force_draw = 0
+        self.players_rest = np.zeros(4, dtype=np.int8)
+        self.trash = []
         self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
 
-        file_handler = logging.FileHandler("player.log")
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        self.logger = logging.getLogger(__name__)
-        #self.logger.setLevel(logging.DEBUG)
-        self.logger.addHandler(file_handler)
-
-        self.plpb = ProbabilityModel()
-        #how many number of cards next player have to draw
-        self.force_draw = 0
-        self.players_rest = np.zeros(4, dtype=np.int8)
-
-        self.trash = []
-
-    
-    def join_room_callback(self, your_id:str):
+    def join_room_callback(self, your_id: str):
         self.playername2_123 = ddict()
         self.playername2_123[your_id] = 0
         self.myname = your_id
 
-
-    def first_player(self, play_order:list[str], first_card:dict):
-        #Complete
-        self.plpb = ProbabilityModel()
-    
-        #カード関連
+    def first_player(self, play_order: list[str], first_card: dict):
+        # カード関連
         card = Card._from_str(first_card)
-        if card in Master.card_skipbind2 or card in Master.card_plus_four or card in Master.card_shuffle:
+        if (
+            card in Master.card_skipbind2
+            or card in Master.card_plus_four
+            or card in Master.card_shuffle
+        ):
             return
         if card in Master.card_plus_two:
             self.force_draw = 2
+        elif card in Master.card_wild:
+            self.desk_color = None
+        else:
+            self.desk_color = first_card.get("color")
         self.plpb.i_get_card([card])
         self.plpb.i_submit_card(card)
-        self.desk_color = None
         self.trash.append(Card._from_str(first_card))
-        
-        #turn関連
+
+        # turn関連
         my_turn = play_order.index(self.myname)
         for i in range(1, 4):
             self.playername2_123[play_order[(my_turn + i) % 4]] = i
         print(self.playername2_123)
         self.order = play_order
 
-    def get_card(self, c: list[dict], penalty:bool=False):
+    def get_card(self, c: list[dict], penalty: bool = False):
         if penalty:
             self.logger.info("get card for penalty")
         ndarrc = np.array([Card._from_str(card) for card in c])
-        print("i get cards " , ndarrc)
+        print("i get cards ", ndarrc)
         self.plpb.i_get_card(ndarrc)
-        self.num_cards = self.__get_card(self.Cards, ndarrc)
+        self.num_cards += self.__get_card(self.Cards, ndarrc)
 
     @staticmethod
     @njit(cache=True)
-    def __get_card(
-        Cards: np.ndarray[np.int8], arrc: np.ndarray[np.int8]
-    ):
+    def __get_card(Cards: np.ndarray[np.int8], arrc: np.ndarray[np.int8]):
         num_cards = len(arrc)
         for i in arrc:
             Cards[i] += 1
         return num_cards
 
     def reset_my_cards(self):
+        self.plpb = ProbabilityModel()
+        self.force_draw = 0
+        self.players_rest = np.zeros(4, dtype=np.int8)
+        self.trash = []
+        self.playername2_123 = ddict()
+        self.playername2_123[self.myname] = 0
+        self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
-        self.Cards -= self.Cards
 
+    def is_challenge(self):
+        return False
     
-    def receive_next_player(self, next_player, before_player, card_before, card_of_player, must_call_draw_card:bool, 
-                            turn_right:bool, number_of_card_play:int, number_of_turn_play:int, number_card_of_player:dict):
-        assert next_player == self.myname
+    def public_card(self, cards:list[dict]):
+        pass
+    
+    def receive_next_player(
+        self,
+        next_player,
+        before_player,
+        card_before,
+        card_of_player,
+        must_call_draw_card: bool,
+        turn_right: bool,
+        number_of_card_play: int,
+        number_of_turn_play: int,
+        number_card_of_player: dict,
+    ):
+        # assert next_player == self.myname
         start = time.time()
         while self.trash[-1] != Card._from_str(card_before):
             time.sleep(0.01)
-        print("trash is ",  self.trash)
+        # print("trash is ", self.trash)
         assert self.trash[-1] == Card._from_str(card_before)
         end = time.time()
         print("until coincide with trash", end - start)
-        assert (self.force_draw > 0) or (self.players_rest[self.order.index(self.myname)] > 0)  == must_call_draw_card
+        assert (self.force_draw > 0) or (
+            self.players_rest[self.order.index(self.myname)] > 0
+        ) == must_call_draw_card
 
         ndarrc = np.array([Card._from_str(card) for card in card_of_player])
         unique, counts = np.unique(ndarrc, return_counts=True)
+        temp = 0
         while self.num_cards != len(ndarrc):
             time.sleep(0.01)
+            temp += 1
+            if temp > 300:
+                break
         print("my_card and ndarrc", self.Cards, ndarrc)
         print("until coincide between mycard, receive", time.time() - end)
         assert np.all(counts == self.Cards[unique])
 
         if must_call_draw_card:
             return None
-        
-        
-        cs = self.__get_turn(self.Cards, RPlayer.rule.canSubmit_byint(self.trash[-1], self.desk_color))
+        print("rest", 4.5 + start - time.time())
+        print(self.plpb.have_num_card)
+        print(self.desk_color, str(Card(self.trash[-1])))
+        cs = self.__get_turn(
+            self.Cards,
+            RPlayer.rule.canSubmit_byint(
+                self.trash[-1], RPlayer.colors.index(card_before.get("color"))
+            ),
+        )
         print(cs)
         if self.__all(cs):
             return None
-        
+
         num_c_o_p = [0] * 4
         for playername, num in number_card_of_player.items():
             num_c_o_p[self.playername2_123[playername]] = num
+
         self.plpb.other_player_get_card_until_num(self.Cards, num_c_o_p)
-        
+
         i, c = self.strategy(cs)
         yell_uno = self.num_cards == 2
         return i, c, yell_uno
@@ -1146,11 +1239,15 @@ class RPlayer:
         else:
             c = None
         return i, c
-    
+
     @staticmethod
     @njit(cache=True)
     def __strategy(cs: np.ndarray[np.int8]):
-        i = np.where(cs > 0)[0][0]
+        cand = np.where(cs > 0)[0]
+        if len(cand) >= 2 and cs[52] > 0:
+            i = cand[np.where(cand != 52)[0][0]]
+        else:
+            i = cand[0]
         if i >= 52 and i <= 53:
             c = np.random.randint(4)
         else:
@@ -1175,21 +1272,30 @@ class RPlayer:
         restnum -= 1
         return restnum, restnum == 1
 
-    
-    def receive_play_card(self, card:dict, yell_uno:bool, playername:str, color_of_wild:str = None):
-        #TODO: Cardが無効だった場合の判定
+    def receive_play_card(
+        self, card: dict, yell_uno: bool, playername: str, color_of_wild: str = None
+    ):
+        action = Card._from_str(card)
+        if action in Master.card_shuffle:
+            time.sleep(0.1)
+        self.force_draw = 0
+
         if playername != self.myname:
             print(playername, self.playername2_123[playername], Card._from_str(card))
-            self.plpb.other_player_submit_card(self.playername2_123[playername], Card._from_str(card))
+            self.plpb.other_player_submit_card(
+                self.playername2_123[playername], Card._from_str(card)
+            )
         else:
-            self.num_cards -= 1
-            self.Cards[Card._from_str(card)] -= 1
-            self.plpb.i_submit_card(Card._from_str(card)) 
-        action = Card._from_str(card)
-        assert self.force_draw == 0
+            if Card._from_str(card) in Master.card_shuffle:
+                self.plpb.i_submit_card(Card._from_str(card))
+            else:
+                self.num_cards -= 1
+                self.Cards[Card._from_str(card)] -= 1
+                self.plpb.i_submit_card(Card._from_str(card))
 
         if action in Master.card_plus_two:
             self.force_draw = 2
+            color_of_wild = card.get("color")
         elif action in Master.card_plus_four:
             self.force_draw = 4
         elif action in Master.card_shuffle:
@@ -1197,17 +1303,24 @@ class RPlayer:
         elif action in Master.card_skipbind2:
             turn = self.order.index(playername)
             self.players_rest[(turn + 2) % 4] += 2
-            color_of_wild = self.desk_color
-        elif action in Master.card_skip:
-            pass
-        #配ろうとしたのちにtrashに加える.
+            color_of_wild = RPlayer.colors[self.desk_color]
+        else:
+            "無印だった場合は"
+            color_of_wild = card.get("color")
+        # 配ろうとしたのちにtrashに加える.
         self.trash.append(action)
-        self.desk_color = RPlayer.colors.index(color_of_wild) if color_of_wild is not None else None
-    
-    def receive_play_draw_card(self, playername, card:dict, yell_uno:bool, color_of_wild:str = None):
+
+        if action not in Master.card_shuffle:
+            self.desk_color = RPlayer.colors.index(color_of_wild)
+        else:
+            self.desk_color = None
+
+    def receive_play_draw_card(
+        self, playername, card: dict, yell_uno: bool, color_of_wild: str = None
+    ):
         self.receive_play_card(card, yell_uno, playername, color_of_wild)
 
-    def receive_draw_card(self, playername:str):
+    def receive_draw_card(self, playername: str):
         if playername == self.myname:
             flag = False
         else:
@@ -1215,78 +1328,103 @@ class RPlayer:
 
         if self.force_draw > 0:
             if flag:
-                self.plpb.other_player_get_card(self.playername2_123[playername], self.Cards, self.force_draw)
+                self.plpb.other_player_get_card(
+                    self.playername2_123[playername], self.Cards, self.force_draw
+                )
+            if (
+                self.force_draw == 4
+                and self.players_rest[self.order.index(playername)] > 0
+            ):
+                self.players_rest[self.order.index(playername)] -= 1
             self.force_draw = 0
             return
         if self.players_rest[self.order.index(playername)] > 0:
             if flag:
-                self.plpb.other_player_get_card(self.playername2_123[playername], self.Cards, 1)
+                self.plpb.other_player_get_card(
+                    self.playername2_123[playername], self.Cards, 1
+                )
             self.players_rest[self.order.index(playername)] -= 1
+            print("rest", self.players_rest, self.order)
             return
         if flag:
-            self.plpb.other_player_pass(self.playername2_123[playername], self.trash[-1], self.desk_color)
-            self.plpb.other_player_get_card(self.playername2_123[playername], self.Cards, 1)
-    
-    def callback_draw_card(self, playername:str, is_draw:bool, can_play_draw_card:bool, card:list[dict]):
+            self.plpb.other_player_pass(
+                self.playername2_123[playername], self.trash[-1], self.desk_color
+            )
+            self.plpb.other_player_get_card(
+                self.playername2_123[playername], self.Cards, 1
+            )
+
+    def callback_draw_card(
+        self, playername: str, is_draw: bool, can_play_draw_card: bool, card: list[dict]
+    ):
         """
         pass: None
         play:card, color, yell_uno
         """
         assert playername == self.myname
         self.get_card(card)
+        print("my card", self.Cards)
         if not can_play_draw_card:
             return None
         assert is_draw
 
-        get_card = Card._from_str(card)
-        if Player.rule.canSubmit_byint(self.trash[-1], self.desk_color)[get_card] == 0:
-            return None
-        else:
-            cs = np.zeros(Card.VARIATION, dtype=np.int8)
-            cs[get_card] = 1
-            i, c = self.strategy(cs)
-            self.num_cards, flag = self.__i_and_c(i, self.num_cards, self.Cards)
-            return i, c, flag
-        
+        get_card = Card._from_str(card[0])
+        cs = np.zeros(Card.VARIATION, dtype=np.int8)
+        cs[get_card] = 1
+        print(get_card)
+        i, c = self.strategy(cs)
+        print(i, c)
+        return i, c, self.num_cards == 2
+
     def receive_challenge(self, challenger, target, is_challenge, is_challenge_success):
-        pass
+        self.force_draw = 0
+        if is_challenge_success:
+            self.plpb.other_player_get_card(
+                self.playername2_123[target], self.Cards, 4)
+        else:
+            self.plpb.other_player_get_card(
+                self.playername2_123[challenger], self.Cards, 6)
 
     def receive_pointed_not_say_uno(self, pointer, target, have_say_uno):
         pass
 
-    def receive_receiver_card(self, cards_receive:list[dict], is_penalty:bool):
+    def receive_receiver_card(self, cards_receive: list[dict], is_penalty: bool):
         assert not is_penalty
         if len(cards_receive) == 7 and np.sum(self.Cards) == 0:
             self.get_card(cards_receive)
 
     def receive_color_of_wild(self):
-        #TODO: 色の決め方改善
+        # TODO: 色の決め方改善
         return RPlayer.colors[0]
-        
-    def receive_update_color(self, color:str):
+
+    def receive_update_color(self, color: str):
         self.desk_color = RPlayer.colors.index(color)
 
-    
-    
-    def receive_shuffle_wild(self, cards_receive:list[dict], number_of_cards_player_receive:dict):
+    def receive_shuffle_wild(
+        self, cards_receive: list[dict], number_of_cards_player_receive: dict
+    ):
         number_of_cards_player = [0] * 4
         for playername, num in number_of_cards_player_receive.items():
             number_of_cards_player[self.playername2_123[playername]] = num
-        afcards = self.__change_data_type_of_cards(np.array([Card._from_str(card) for card in cards_receive]))
+        afcards = self.__change_data_type_of_cards(
+            np.array([Card._from_str(card) for card in cards_receive])
+        )
+        print(afcards)
         self.plpb.improved_shuffle(self.Cards, afcards, number_of_cards_player)
-        self.Cards = afcards
 
-    @staticmethod
-    @njit(cache=True)
-    def __change_data_type_of_cards(cards:np.ndarray[np.int8]):
+        self.Cards = afcards
+        print(self.Cards)
+        self.num_cards = np.sum(self.Cards)
+
+    def __change_data_type_of_cards(self, cards: np.ndarray[np.int8]):
         unique, counts = np.unique(cards, return_counts=True)
         ans = np.zeros(56, dtype=np.int8)
         ans[unique] = counts
         return ans
-    
+
     def receive_finish_turn(self, scores):
         self.reset_my_cards()
-        
+
 
 """
 定数
@@ -1699,7 +1837,9 @@ def on_join_room(data_res):
 # カードが手札に追加された
 @sio.on(SocketConst.EMIT.RECEIVER_CARD)
 def on_reciever_card(data_res):
-    rplayer.receive_receiver_card(data_res.get("cards_receive"), data_res.get("is_penalty"))
+    rplayer.receive_receiver_card(
+        data_res.get("cards_receive"), data_res.get("is_penalty")
+    )
     receive_event(SocketConst.EMIT.RECEIVER_CARD, data_res)
 
 
@@ -1714,7 +1854,7 @@ def on_first_player(data_res):
 @sio.on(SocketConst.EMIT.COLOR_OF_WILD)
 def on_color_of_wild(data_res):
     def color_of_wild_callback(data_res):
-        color = rplayer.receive_color_of_wild
+        color = rplayer.receive_color_of_wild()
         data = {
             "color_of_wild": color,
         }
@@ -1738,7 +1878,9 @@ def on_shuffle_wild(data_res):
     def shuffle_wild_calback(data_res):
         global uno_declared
         uno_declared = {}
-        rplayer.receive_shuffle_wild(data_res.get("cards_receive"), data_res.get("number_card_of_player"))
+        rplayer.receive_shuffle_wild(
+            data_res.get("cards_receive"), data_res.get("number_card_of_player")
+        )
         for k, v in data_res.get("number_card_of_player").items():
             if v == 1:
                 # シャッフル後に1枚になったプレイヤーはUNO宣言を行ったこととする
@@ -1771,7 +1913,17 @@ def on_next_player(data_res):
         if special_logic_num_random == 0:
             send_event(SocketConst.EMIT.SPECIAL_LOGIC, {"title": SPECIAL_LOGIC_TITLE})
 
-        play_card = rplayer.receive_next_player(data_res.get("next_player"), data_res.get("before_player"), data_res.get("card_before"), cards, data_res.get("must_call_draw_card"), data_res.get("turn_right"), data_res.get("number_of_card_play"), data_res.get("number_of_turn_play"), data_res.get("number_card_of_player"))
+        play_card = rplayer.receive_next_player(
+            data_res.get("next_player"),
+            data_res.get("before_player"),
+            data_res.get("card_before"),
+            cards,
+            data_res.get("must_call_draw_card"),
+            data_res.get("turn_right"),
+            data_res.get("number_of_card_play"),
+            data_res.get("number_of_turn_play"),
+            data_res.get("number_card_of_player"),
+        )
 
         if play_card is not None:
             i, c, yell_uno = play_card
@@ -1801,26 +1953,33 @@ def on_next_player(data_res):
 
             # draw-cardイベント受信時の個別処理
             def draw_card_callback(res):
-                play_card = rplayer.callback_draw_card(data_res.get("next_player"), res.get("is_draw"), res.get("can_play_draw_card"), res.get("draw_card"))
+                play_card = rplayer.callback_draw_card(
+                    data_res.get("next_player"),
+                    res.get("is_draw"),
+                    res.get("can_play_draw_card"),
+                    res.get("draw_card"),
+                )
+                print(play_card)
                 if play_card is None:
                     # 引いたカードを出せないので処理を終了
                     return
-                i, c, yell_uno = play_card
-                play_card = Card._to_str(i)
+                else:
+                    i, c, yell_uno = play_card
+                    play_card = Card._to_str(i)
 
                 # 以後、引いたカードが場に出せるときの処理
-                data = {
-                    "is_play_card": True,
-                    "yell_uno": len(cards + res.get("draw_card"))
-                    == 2,  # 残り手札数を考慮してUNOコールを宣言する
-                }
+                    data = {
+                        "is_play_card": True,
+                        "yell_uno": len(cards + res.get("draw_card"))
+                        == 2,  # 残り手札数を考慮してUNOコールを宣言する
+                    }
 
-                play_card = res.get("draw_card")[0]
-                if (
-                    play_card.get("special") == Special.WILD
-                    or play_card.get("special") == Special.WILD_DRAW_4
-                ):
-                    data["color_of_wild"] = c
+                    play_card = res.get("draw_card")[0]
+                    if (
+                        play_card.get("special") == Special.WILD
+                        or play_card.get("special") == Special.WILD_DRAW_4
+                    ):
+                        data["color_of_wild"] = c
 
                 # 引いたカードを出すイベントを実行
                 send_event(SocketConst.EMIT.PLAY_DRAW_CARD, data)
@@ -1836,7 +1995,12 @@ def on_next_player(data_res):
 def on_play_card(data_res):
     def play_card_callback(data_res):
         global uno_declared
-        rplayer.receive_play_card(data_res.get("card_play"), data_res.get("yell_uno"), data_res.get("player"), data_res.get("color_of_wild"))
+        rplayer.receive_play_card(
+            data_res.get("card_play"),
+            data_res.get("yell_uno"),
+            data_res.get("player"),
+            data_res.get("color_of_wild"),
+        )
         # UNO宣言を行った場合は記録する
         if data_res.get("yell_uno"):
             uno_declared[data_res.get("player")] = data_res.get("yell_uno")
@@ -1861,7 +2025,12 @@ def on_draw_card(data_res):
 @sio.on(SocketConst.EMIT.PLAY_DRAW_CARD)
 def on_play_draw_card(data_res):
     def play_draw_card_callback(data_res):
-        rplayer.receive_play_draw_card(data_res.get("player"), data_res.get("card_play"), data_res.get("yell_uno"), data_res.get("color_of_wild"))
+        rplayer.receive_play_draw_card(
+            data_res.get("player"),
+            data_res.get("card_play"),
+            data_res.get("yell_uno"),
+            data_res.get("color_of_wild"),
+        )
         global uno_declared
         # UNO宣言を行った場合は記録する
         if data_res.get("yell_uno"):
@@ -1873,7 +2042,12 @@ def on_play_draw_card(data_res):
 # チャレンジの結果
 @sio.on(SocketConst.EMIT.CHALLENGE)
 def on_challenge(data_res):
-    rplayer.receive_challenge(data_res.get("challenger"), data_res.get("target"), data_res.get("is_challenge"), data_res.get("is_challenge_success"))
+    rplayer.receive_challenge(
+        data_res.get("challenger"),
+        data_res.get("target"),
+        data_res.get("is_challenge"),
+        data_res.get("is_challenge_success"),
+    )
     receive_event(SocketConst.EMIT.CHALLENGE, data_res)
 
 
