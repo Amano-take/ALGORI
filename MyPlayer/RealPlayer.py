@@ -258,7 +258,7 @@ class Master:
         self.deck = deck.copy()
         self.trash = trash.copy()
         self.turn_plus = reverse
-        self.player_rest = player_rest
+        self.player_rest = player_rest.copy()
         self.desk_color = color
         # playerにカードを渡す。
         self.players[0].Cards = my_deck.copy()
@@ -924,13 +924,12 @@ class ProbabilityModel:
         np.random.shuffle(rest_deck)
         return others, rest_deck, self.trash
 
-    def get_rest(self, my_cards, card):
+    def get_rest(self, my_cards):
         rest = np.copy(self.inideckcount)
         ut, ct = np.unique(self.trash, return_counts=True)
         if len(ut) > 0:
             rest[ut] -= ct
         rest -= my_cards
-        rest[card] -= 1
         return rest
 
     def get_index(self, t):
@@ -952,7 +951,7 @@ class Player:
         self.logging.setLevel(logging.WARN)
 
     def get_card(self, c: np.ndarray[int]):
-        self.num_cards = self.__get_card(self.Cards, c, self.num_cards, Card.VARIATION)
+        self.num_cards = self.__get_card(self.Cards, np.array(c, dtype=np.int8), self.num_cards, Card.VARIATION)
 
     @staticmethod
     @njit(cache=True)
@@ -993,6 +992,7 @@ class Player:
         return i, c
 
     def get_turn(self, c: int, color, trash=None, turn_plus=1):
+        assert np.all(self.Cards >= 0)
         cs = self.__get_turn(self.Cards, Player.rule.canSubmit_byint(c, color))
         if self.__all(cs):
             return -1, None
@@ -1107,6 +1107,25 @@ class RPlayer:
         self.trash = []
         self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
+        self.simmaster = Master(self.logger)
+        self.first_sim()
+    
+    def first_sim(self):
+        cumsum = self.plpb.get_player_cumsum()
+        rest = self.plpb.get_rest(self.Cards)
+        self.Cards[0] = 1
+        self.Cards[13] = 1
+        self.Cards[15] = 1
+        self.Cards[18] = 1
+        self.Cards[20] = 1
+        self.Cards[21] = 1
+        self.Cards[23] = 1
+        card = np.where(self.Cards > 0)[0][0]
+        self.Cards[card] -= 1
+        self.num_cards = 6
+        self.simulate(1, card, None, cumsum, self.players_rest, rest)
+        self.Cards -= self.Cards
+        self.num_cards = 0
 
     def join_room_callback(self, your_id: str):
         self.playername2_123 = ddict()
@@ -1167,10 +1186,10 @@ class RPlayer:
 
     def is_challenge(self):
         return False
-    
-    def public_card(self, cards:list[dict]):
+
+    def public_card(self, cards: list[dict]):
         pass
-    
+
     def receive_next_player(
         self,
         next_player,
@@ -1191,6 +1210,7 @@ class RPlayer:
         assert self.trash[-1] == Card._from_str(card_before)
         end = time.time()
         print("until coincide with trash", end - start)
+        print("force_draw", self.force_draw, "players_rest", self.players_rest)
         assert (self.force_draw > 0) or (
             self.players_rest[self.order.index(self.myname)] > 0
         ) == must_call_draw_card
@@ -1209,7 +1229,7 @@ class RPlayer:
 
         if must_call_draw_card:
             return None
-        print("rest", 4.5 + start - time.time())
+        
         print(self.plpb.have_num_card)
         print(self.desk_color, str(Card(self.trash[-1])))
         cs = self.__get_turn(
@@ -1228,31 +1248,90 @@ class RPlayer:
 
         self.plpb.other_player_get_card_until_num(self.Cards, num_c_o_p)
 
-        i, c = self.strategy(cs)
-        yell_uno = self.num_cards == 2
-        return i, c, yell_uno
+        cand = self.__strategy(cs)
 
-    def strategy(self, cs):
-        i, c = self.__strategy(cs)
-        if c != -1:
-            c = RPlayer.colors[c]
+        print(cand)
+        if turn_right:
+            self.turn_plus = 1
         else:
-            c = None
-        return i, c
+            self.turn_plus = -1
+
+        i, c = self.strategy(cand, self.turn_plus, self.players_rest, 4.5 - (time.time() - start))
+        yell_uno = self.num_cards == 2
+        if c is not None:
+            c = RPlayer.colors[c]
+        return i, c, yell_uno
 
     @staticmethod
     @njit(cache=True)
     def __strategy(cs: np.ndarray[np.int8]):
         cand = np.where(cs > 0)[0]
         if len(cand) >= 2 and cs[52] > 0:
-            i = cand[np.where(cand != 52)[0][0]]
-        else:
-            i = cand[0]
-        if i >= 52 and i <= 53:
-            c = np.random.randint(4)
-        else:
-            c = -1
-        return i, c
+            cand = cand[cand != 52]
+
+        return cand
+
+    def strategy(self, cand, turn_plus, player_rest, rest_time):
+        action_score = ddict(int)
+        cumsum = self.plpb.get_player_cumsum()
+        rest = self.plpb.get_rest(self.Cards)
+        start = time.time()
+        for card in cand:
+            card = int(card)
+            self.Cards[card] -= 1
+            self.num_cards -= 1
+            if card >= 52 and card != 55:
+                for color in range(4):
+                    action_score[(card, color)] = (1, self.simulate(
+                        turn_plus, card, color, cumsum, player_rest, rest
+                    ))
+            else:
+                action_score[(card, None)] = (1, self.simulate(
+                    turn_plus, card, None, cumsum, player_rest, rest
+                ))
+            self.Cards[card] += 1
+            self.num_cards += 1
+        if len(action_score) == 1:
+            return max(action_score, key=lambda x: action_score[x][0])
+    
+        while time.time() - start < rest_time:
+            card, color = max(action_score, key=lambda x: 100 / action_score[x][0]  + action_score[x][1])
+            times, score = action_score[(card, color)]
+            new_score = self.simulate(turn_plus, card, color, cumsum, player_rest, rest)
+            action_score[(card, color)] = (
+                times + 1,
+                score + (new_score - score) / (times + 1),
+            )
+        
+        print(action_score)
+        return max(action_score, key=lambda x: action_score[x][0])
+
+    def simulate(self, turn_plus, card, color, cumsum, player_rest, rest):
+        scores = 0
+        simulate_num = 10
+        start = time.time()
+        for _ in range(simulate_num):
+            
+            others, deck, trash = self.plpb.get_player_card(cumsum, rest)
+            scores += self.scores2score(
+                self.simmaster.set_board(
+                    deck,
+                    turn_plus,
+                    self.Cards,
+                    others,
+                    trash,
+                    card,
+                    color,
+                    0,
+                    player_rest,
+                )
+                / simulate_num
+            )
+            #print("end", time.time() - start)
+        return scores
+
+    def scores2score(self, scores):
+        return scores[0] - np.average(scores[1:])
 
     @staticmethod
     @njit(cache=True)
@@ -1276,6 +1355,7 @@ class RPlayer:
         self, card: dict, yell_uno: bool, playername: str, color_of_wild: str = None
     ):
         action = Card._from_str(card)
+        self.trash.append(action)
         if action in Master.card_shuffle:
             time.sleep(0.1)
         self.force_draw = 0
@@ -1308,7 +1388,7 @@ class RPlayer:
             "無印だった場合は"
             color_of_wild = card.get("color")
         # 配ろうとしたのちにtrashに加える.
-        self.trash.append(action)
+        
 
         if action not in Master.card_shuffle:
             self.desk_color = RPlayer.colors.index(color_of_wild)
@@ -1362,6 +1442,7 @@ class RPlayer:
         play:card, color, yell_uno
         """
         assert playername == self.myname
+        start = time.time()
         self.get_card(card)
         print("my card", self.Cards)
         if not can_play_draw_card:
@@ -1372,18 +1453,21 @@ class RPlayer:
         cs = np.zeros(Card.VARIATION, dtype=np.int8)
         cs[get_card] = 1
         print(get_card)
-        i, c = self.strategy(cs)
+        cand = self.__strategy(cs)
+        i, c = self.strategy(cand, self.turn_plus, self.players_rest, 4.5 - (time.time() - start))
         print(i, c)
+        if c is not None:
+            c = RPlayer.colors[c]
         return i, c, self.num_cards == 2
 
     def receive_challenge(self, challenger, target, is_challenge, is_challenge_success):
         self.force_draw = 0
         if is_challenge_success:
-            self.plpb.other_player_get_card(
-                self.playername2_123[target], self.Cards, 4)
+            self.plpb.other_player_get_card(self.playername2_123[target], self.Cards, 4)
         else:
             self.plpb.other_player_get_card(
-                self.playername2_123[challenger], self.Cards, 6)
+                self.playername2_123[challenger], self.Cards, 6
+            )
 
     def receive_pointed_not_say_uno(self, pointer, target, have_say_uno):
         pass
@@ -1967,7 +2051,7 @@ def on_next_player(data_res):
                     i, c, yell_uno = play_card
                     play_card = Card._to_str(i)
 
-                # 以後、引いたカードが場に出せるときの処理
+                    # 以後、引いたカードが場に出せるときの処理
                     data = {
                         "is_play_card": True,
                         "yell_uno": len(cards + res.get("draw_card"))
