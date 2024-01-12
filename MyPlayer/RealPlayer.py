@@ -995,7 +995,9 @@ class Player:
         return i, c
 
     def get_turn(self, c: int, color, trash=None, turn_plus=1):
-        assert np.all(self.Cards >= 0)
+        if not np.all(self.Cards >= 0):
+            self.Cards[self.Cards < 0] = 0
+            self.num_cards = np.sum(self.Cards)
         cs = self.__get_turn(self.Cards, Player.rule.canSubmit_byint(c, color))
         if self.__all(cs):
             return -1, None
@@ -1156,7 +1158,7 @@ class RPlayer:
         elif card in Master.card_wild:
             self.desk_color = None
         else:
-            self.desk_color = first_card.get("color")
+            self.desk_color = rplayer.colors.index(first_card.get("color"))
         # self.plpb.i_get_card([card])
         # self.plpb.i_submit_card(card)
         self.trash.append(Card._from_str(first_card))
@@ -1304,7 +1306,7 @@ class RPlayer:
         if len(temp) > 0:
             self.trash = temp
         return
-
+    
     def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num):
         action_score = ddict(int)
         # cumsum = self.plpb.get_player_cumsum()
@@ -1356,25 +1358,28 @@ class RPlayer:
         scores = 0
         simulate_num = 10
         trash = self.trash.copy()
-        for _ in range(simulate_num):
+        for i in range(simulate_num):
             # others, deck, trash = self.plpb.get_player_card(cumsum, rest)
-            other_player_cards, deck = self.random_likelihood2(
+            try:
+                other_player_cards, deck = self.random_likelihood2(
                 trash, other_player_cards_num[1:], self.players_pass_history
-            )
-            scores += self.scores2score(
-                self.simmaster.set_board(
-                    deck,
-                    turn_plus,
-                    self.Cards,
-                    other_player_cards,
-                    trash,
-                    card,
-                    color,
-                    0,
-                    player_rest,
                 )
-                / simulate_num
-            )
+                scores += self.scores2score(
+                    self.simmaster.set_board(
+                        deck,
+                        turn_plus,
+                        self.Cards,
+                        other_player_cards,
+                        trash,
+                        card,
+                        color,
+                        0,
+                        player_rest,
+                    )
+                    / simulate_num
+                )
+            except:
+                scores += 0
             # print("end", time.time() - start)
         return scores
 
@@ -1412,6 +1417,8 @@ class RPlayer:
         try:
             restCards = np.repeat(self.uinideck, restcount)
         except:
+            restcount[restcount < 0] = 0
+            restCards = np.repeat(self.uinideck, restcount)
             print(restcount)
         # restCards : np.ndarray[int] -> [0 1 1 2 2 ...]
         # ランダムチョイス, replaceを変えればうまくいきそう
@@ -1425,7 +1432,12 @@ class RPlayer:
                 if card_deliver[p] == 0:
                     continue
                 for pass_history in players_pass_history[p][::-1]:
-                    if rplayer.rule.canSubmit_byint(pass_history[0], pass_history[1])[card] == 1:
+                    if (
+                        rplayer.rule.canSubmit_byint(pass_history[0], pass_history[1])[
+                            card
+                        ]
+                        == 1
+                    ):
                         break
                 else:
                     tmp[p].append(card)
@@ -1614,7 +1626,19 @@ class RPlayer:
 
     def receive_color_of_wild(self):
         # TODO: 色の決め方改善
-        return RPlayer.colors[0]
+        start = time.time()
+        cand = np.zeros(56, dtype=np.int8)
+        cand[53] = 1
+        self.Cards[53] += 1
+        i, c = self.strategy(
+            cand,
+            self.turn_plus,
+            self.players_rest,
+            4.5 - (time.time() - start),
+            self.num_c_o_p,
+        )
+        self.Cards[53] -= 1
+        return RPlayer.colors[c]
 
     def receive_update_color(self, color: str):
         self.desk_color = RPlayer.colors.index(color)
