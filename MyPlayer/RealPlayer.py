@@ -262,7 +262,8 @@ class Master:
         self.desk_color = color
         # playerにカードを渡す。
         self.players[0].Cards = my_deck.copy()
-        self.players[0].num_cards = len(my_deck)
+        self.players[0].num_cards = np.sum(my_deck)
+
         for i in range(1, 4):
             self.players[i].get_card(other_decks[i - 1])
 
@@ -951,7 +952,9 @@ class Player:
         self.logging.setLevel(logging.WARN)
 
     def get_card(self, c: np.ndarray[int]):
-        self.num_cards = self.__get_card(self.Cards, np.array(c, dtype=np.int8), self.num_cards, Card.VARIATION)
+        self.num_cards = self.__get_card(
+            self.Cards, np.array(c, dtype=np.int8), self.num_cards, Card.VARIATION
+        )
 
     @staticmethod
     @njit(cache=True)
@@ -1101,18 +1104,21 @@ class RPlayer:
         self.logger.addHandler(file_handler)
 
         # RESET
-        self.plpb = ProbabilityModel()
+        # self.plpb = ProbabilityModel()
+        self.players_pass_history = [[] for _ in range(3)]
         self.force_draw = 0
         self.players_rest = np.zeros(4, dtype=np.int8)
         self.trash = []
         self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
         self.simmaster = Master(self.logger)
+        self.inideck = self.simmaster.init_deck()
+        self.uinideck, self.inideckcount = np.unique(self.inideck, return_counts=True)
         self.first_sim()
-    
+
     def first_sim(self):
-        cumsum = self.plpb.get_player_cumsum()
-        rest = self.plpb.get_rest(self.Cards)
+        # cumsum = self.plpb.get_player_cumsum()
+        # rest = self.plpb.get_rest(self.Cards)
         self.Cards[0] = 1
         self.Cards[13] = 1
         self.Cards[15] = 1
@@ -1123,9 +1129,13 @@ class RPlayer:
         card = np.where(self.Cards > 0)[0][0]
         self.Cards[card] -= 1
         self.num_cards = 6
-        self.simulate(1, card, None, cumsum, self.players_rest, rest)
+        self.trash = [12]
+        self.simulate(
+            1, card, None, self.players_rest, np.array([6, 7, 7, 7], dtype=np.int8)
+        )
         self.Cards -= self.Cards
         self.num_cards = 0
+        self.trash = []
 
     def join_room_callback(self, your_id: str):
         self.playername2_123 = ddict()
@@ -1147,8 +1157,8 @@ class RPlayer:
             self.desk_color = None
         else:
             self.desk_color = first_card.get("color")
-        self.plpb.i_get_card([card])
-        self.plpb.i_submit_card(card)
+        # self.plpb.i_get_card([card])
+        # self.plpb.i_submit_card(card)
         self.trash.append(Card._from_str(first_card))
 
         # turn関連
@@ -1163,7 +1173,7 @@ class RPlayer:
             self.logger.info("get card for penalty")
         ndarrc = np.array([Card._from_str(card) for card in c])
         print("i get cards ", ndarrc)
-        self.plpb.i_get_card(ndarrc)
+        # self.plpb.i_get_card(ndarrc)
         self.num_cards += self.__get_card(self.Cards, ndarrc)
 
     @staticmethod
@@ -1175,7 +1185,7 @@ class RPlayer:
         return num_cards
 
     def reset_my_cards(self):
-        self.plpb = ProbabilityModel()
+        # self.plpb = ProbabilityModel()
         self.force_draw = 0
         self.players_rest = np.zeros(4, dtype=np.int8)
         self.trash = []
@@ -1183,6 +1193,7 @@ class RPlayer:
         self.playername2_123[self.myname] = 0
         self.Cards = np.zeros(Card.VARIATION, dtype=np.int8)
         self.num_cards = 0
+        self.players_pass_history = [[] for _ in range(3)]
 
     def is_challenge(self):
         return False
@@ -1204,16 +1215,21 @@ class RPlayer:
     ):
         # assert next_player == self.myname
         start = time.time()
+        tmp = 0
         while self.trash[-1] != Card._from_str(card_before):
             time.sleep(0.01)
+            temp += 1
+            if temp > 100:
+                break
         # print("trash is ", self.trash)
-        assert self.trash[-1] == Card._from_str(card_before)
+        if not self.trash[-1] == Card._from_str(card_before):
+            self.trash.append(Card._from_str(card_before))
         end = time.time()
         print("until coincide with trash", end - start)
         print("force_draw", self.force_draw, "players_rest", self.players_rest)
-        assert (self.force_draw > 0) or (
+        """assert (self.force_draw > 0) or (
             self.players_rest[self.order.index(self.myname)] > 0
-        ) == must_call_draw_card
+        ) == must_call_draw_card"""
 
         ndarrc = np.array([Card._from_str(card) for card in card_of_player])
         unique, counts = np.unique(ndarrc, return_counts=True)
@@ -1221,16 +1237,19 @@ class RPlayer:
         while self.num_cards != len(ndarrc):
             time.sleep(0.01)
             temp += 1
-            if temp > 300:
+            if temp > 100:
                 break
         print("my_card and ndarrc", self.Cards, ndarrc)
         print("until coincide between mycard, receive", time.time() - end)
-        assert np.all(counts == self.Cards[unique])
+        # assert np.all(counts == self.Cards[unique])
+        if not np.all(counts == self.Cards[unique]):
+            self.Cards -= self.Cards
+            self.Cards[unique] = counts
 
         if must_call_draw_card:
             return None
-        
-        print(self.plpb.have_num_card)
+
+        # print(self.plpb.have_num_card)
         print(self.desk_color, str(Card(self.trash[-1])))
         cs = self.__get_turn(
             self.Cards,
@@ -1245,8 +1264,9 @@ class RPlayer:
         num_c_o_p = [0] * 4
         for playername, num in number_card_of_player.items():
             num_c_o_p[self.playername2_123[playername]] = num
-
-        self.plpb.other_player_get_card_until_num(self.Cards, num_c_o_p)
+        self.trash_exchange(num_c_o_p)
+        self.num_c_o_p = num_c_o_p
+        # self.plpb.other_player_get_card_until_num(self.Cards, num_c_o_p)
 
         cand = self.__strategy(cs)
 
@@ -1256,7 +1276,13 @@ class RPlayer:
         else:
             self.turn_plus = -1
 
-        i, c = self.strategy(cand, self.turn_plus, self.players_rest, 4.5 - (time.time() - start))
+        i, c = self.strategy(
+            cand,
+            self.turn_plus,
+            self.players_rest,
+            4.5 - (time.time() - start),
+            num_c_o_p,
+        )
         yell_uno = self.num_cards == 2
         if c is not None:
             c = RPlayer.colors[c]
@@ -1271,10 +1297,18 @@ class RPlayer:
 
         return cand
 
-    def strategy(self, cand, turn_plus, player_rest, rest_time):
+    def trash_exchange(self, other_player_have_num_card):
+        temp = []
+        while len(self.trash) + sum(other_player_have_num_card) >= 112:
+            temp.append(self.trash.pop(-1))
+        if len(temp) > 0:
+            self.trash = temp
+        return
+
+    def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num):
         action_score = ddict(int)
-        cumsum = self.plpb.get_player_cumsum()
-        rest = self.plpb.get_rest(self.Cards)
+        # cumsum = self.plpb.get_player_cumsum()
+        # rest = self.plpb.get_rest(self.Cards)
         start = time.time()
         for card in cand:
             card = int(card)
@@ -1282,43 +1316,57 @@ class RPlayer:
             self.num_cards -= 1
             if card >= 52 and card != 55:
                 for color in range(4):
-                    action_score[(card, color)] = (1, self.simulate(
-                        turn_plus, card, color, cumsum, player_rest, rest
-                    ))
+                    action_score[(card, color)] = (
+                        1,
+                        self.simulate(
+                            turn_plus, card, color, player_rest, other_player_cards_num
+                        ),
+                    )
             else:
-                action_score[(card, None)] = (1, self.simulate(
-                    turn_plus, card, None, cumsum, player_rest, rest
-                ))
+                action_score[(card, None)] = (
+                    1,
+                    self.simulate(
+                        turn_plus, card, None, player_rest, other_player_cards_num
+                    ),
+                )
             self.Cards[card] += 1
             self.num_cards += 1
         if len(action_score) == 1:
             return max(action_score, key=lambda x: action_score[x][0])
-    
-        while time.time() - start < rest_time:
-            card, color = max(action_score, key=lambda x: 100 / action_score[x][0]  + action_score[x][1])
-            times, score = action_score[(card, color)]
-            new_score = self.simulate(turn_plus, card, color, cumsum, player_rest, rest)
-            action_score[(card, color)] = (
-                times + 1,
-                score + (new_score - score) / (times + 1),
-            )
-        
-        print(action_score)
-        return max(action_score, key=lambda x: action_score[x][0])
 
-    def simulate(self, turn_plus, card, color, cumsum, player_rest, rest):
+        while time.time() - start < rest_time:
+            for card, color in action_score.keys():
+                self.Cards[card] -= 1
+                self.num_cards -= 1
+                times, score = action_score[(card, color)]
+                new_score = self.simulate(
+                    turn_plus, card, color, player_rest, other_player_cards_num
+                )
+                action_score[(card, color)] = (
+                    times + 1,
+                    score + (new_score - score) / (times + 1),
+                )
+                self.Cards[card] += 1
+                self.num_cards += 1
+
+        print(action_score)
+        return max(action_score, key=lambda x: action_score[x][1])
+
+    def simulate(self, turn_plus, card, color, player_rest, other_player_cards_num):
         scores = 0
         simulate_num = 10
-        start = time.time()
+        trash = self.trash.copy()
         for _ in range(simulate_num):
-            
-            others, deck, trash = self.plpb.get_player_card(cumsum, rest)
+            # others, deck, trash = self.plpb.get_player_card(cumsum, rest)
+            other_player_cards, deck = self.random_likelihood2(
+                trash, other_player_cards_num[1:], self.players_pass_history
+            )
             scores += self.scores2score(
                 self.simmaster.set_board(
                     deck,
                     turn_plus,
                     self.Cards,
-                    others,
+                    other_player_cards,
                     trash,
                     card,
                     color,
@@ -1327,8 +1375,78 @@ class RPlayer:
                 )
                 / simulate_num
             )
-            #print("end", time.time() - start)
+            # print("end", time.time() - start)
         return scores
+
+    def random_likelihood(self, trash, other_player_num_of_card: list[int]):
+        """
+        trash, 自分のカードを除いて、その中からランダムに抽出
+        return [other1, other2, other3], deck
+        other1: deck型
+        """
+        utrash, tcount = np.unique(trash, return_counts=True)
+        restcount = self.inideckcount.copy()
+        restcount[utrash] -= tcount
+        restcount -= self.Cards
+        try:
+            restCards = np.repeat(self.uinideck, restcount)
+        except:
+            print(restcount)
+        # restCards : np.ndarray[int] -> [0 1 1 2 2 ...]
+        # ランダムチョイス, replaceを変えればうまくいきそう
+        tmp = []
+        np.random.shuffle(restCards)
+        s = 0
+        for i in range(3):
+            tmp.append(restCards[s : s + other_player_num_of_card[i]])
+            s += other_player_num_of_card[i]
+        return tmp, restCards[s:]
+
+    def random_likelihood2(
+        self, trash, other_player_num_of_card: list[int], players_pass_history
+    ):
+        utrash, tcount = np.unique(trash, return_counts=True)
+        restcount = self.inideckcount.copy()
+        restcount[utrash] -= tcount
+        restcount -= self.Cards
+        try:
+            restCards = np.repeat(self.uinideck, restcount)
+        except:
+            print(restcount)
+        # restCards : np.ndarray[int] -> [0 1 1 2 2 ...]
+        # ランダムチョイス, replaceを変えればうまくいきそう
+        tmp = [[] for _ in range(3)]
+        np.random.shuffle(restCards)
+        s = np.sum(other_player_num_of_card)
+        card_deliver = other_player_num_of_card.copy()
+        for card in restCards[:s]:
+            perm = self.random_return_permutation()
+            for p in perm:
+                if card_deliver[p] == 0:
+                    continue
+                for pass_history in players_pass_history[p][::-1]:
+                    if rplayer.rule.canSubmit_byint(pass_history[0], pass_history[1])[card] == 1:
+                        break
+                else:
+                    tmp[p].append(card)
+                    card_deliver[p] -= 1
+                    break
+            else:
+                for p in perm:
+                    if card_deliver[p] == 0:
+                        continue
+                    tmp[p].append(card)
+                    card_deliver[p] -= 1
+                    break
+        return tmp, restCards[s:]
+
+    def random_return(self, prob):
+        # return true with prob
+        return np.random.rand() < prob
+
+    def random_return_permutation(self):
+        # return random permutation of [0, 1, 2]
+        return np.random.permutation(3)
 
     def scores2score(self, scores):
         return scores[0] - np.average(scores[1:])
@@ -1362,16 +1480,17 @@ class RPlayer:
 
         if playername != self.myname:
             print(playername, self.playername2_123[playername], Card._from_str(card))
-            self.plpb.other_player_submit_card(
-                self.playername2_123[playername], Card._from_str(card)
-            )
+            # self.plpb.other_player_submit_card(
+            # self.playername2_123[playername], Card._from_str(card)
+            # )
         else:
             if Card._from_str(card) in Master.card_shuffle:
-                self.plpb.i_submit_card(Card._from_str(card))
+                # self.plpb.i_submit_card(Card._from_str(card))
+                pass
             else:
                 self.num_cards -= 1
                 self.Cards[Card._from_str(card)] -= 1
-                self.plpb.i_submit_card(Card._from_str(card))
+                # self.plpb.i_submit_card(Card._from_str(card))
 
         if action in Master.card_plus_two:
             self.force_draw = 2
@@ -1384,11 +1503,12 @@ class RPlayer:
             turn = self.order.index(playername)
             self.players_rest[(turn + 2) % 4] += 2
             color_of_wild = RPlayer.colors[self.desk_color]
+        elif action in Master.card_wild:
+            color_of_wild = color_of_wild
         else:
             "無印だった場合は"
             color_of_wild = card.get("color")
         # 配ろうとしたのちにtrashに加える.
-        
 
         if action not in Master.card_shuffle:
             self.desk_color = RPlayer.colors.index(color_of_wild)
@@ -1408,9 +1528,10 @@ class RPlayer:
 
         if self.force_draw > 0:
             if flag:
-                self.plpb.other_player_get_card(
+                """self.plpb.other_player_get_card(
                     self.playername2_123[playername], self.Cards, self.force_draw
-                )
+                )"""
+                pass
             if (
                 self.force_draw == 4
                 and self.players_rest[self.order.index(playername)] > 0
@@ -1420,19 +1541,25 @@ class RPlayer:
             return
         if self.players_rest[self.order.index(playername)] > 0:
             if flag:
-                self.plpb.other_player_get_card(
+                """self.plpb.other_player_get_card(
                     self.playername2_123[playername], self.Cards, 1
-                )
+                )"""
+                pass
             self.players_rest[self.order.index(playername)] -= 1
             print("rest", self.players_rest, self.order)
             return
         if flag:
-            self.plpb.other_player_pass(
+            """self.plpb.other_player_pass(
                 self.playername2_123[playername], self.trash[-1], self.desk_color
             )
             self.plpb.other_player_get_card(
                 self.playername2_123[playername], self.Cards, 1
+            )"""
+            self.players_pass_history[self.playername2_123[playername] - 1].append(
+                (self.trash[-1], self.desk_color)
             )
+            if len(self.players_pass_history[self.playername2_123[playername] - 1]) > 2:
+                self.players_pass_history[self.playername2_123[playername] - 1].pop(0)
 
     def callback_draw_card(
         self, playername: str, is_draw: bool, can_play_draw_card: bool, card: list[dict]
@@ -1454,7 +1581,13 @@ class RPlayer:
         cs[get_card] = 1
         print(get_card)
         cand = self.__strategy(cs)
-        i, c = self.strategy(cand, self.turn_plus, self.players_rest, 4.5 - (time.time() - start))
+        i, c = self.strategy(
+            cand,
+            self.turn_plus,
+            self.players_rest,
+            4.5 - (time.time() - start),
+            self.num_c_o_p,
+        )
         print(i, c)
         if c is not None:
             c = RPlayer.colors[c]
@@ -1463,11 +1596,13 @@ class RPlayer:
     def receive_challenge(self, challenger, target, is_challenge, is_challenge_success):
         self.force_draw = 0
         if is_challenge_success:
-            self.plpb.other_player_get_card(self.playername2_123[target], self.Cards, 4)
+            # self.plpb.other_player_get_card(self.playername2_123[target], self.Cards, 4)
+            pass
         else:
-            self.plpb.other_player_get_card(
+            """self.plpb.other_player_get_card(
                 self.playername2_123[challenger], self.Cards, 6
-            )
+            )"""
+            pass
 
     def receive_pointed_not_say_uno(self, pointer, target, have_say_uno):
         pass
@@ -1494,8 +1629,8 @@ class RPlayer:
             np.array([Card._from_str(card) for card in cards_receive])
         )
         print(afcards)
-        self.plpb.improved_shuffle(self.Cards, afcards, number_of_cards_player)
-
+        # self.plpb.improved_shuffle(self.Cards, afcards, number_of_cards_player)
+        self.players_pass_history = [[] for _ in range(3)]
         self.Cards = afcards
         print(self.Cards)
         self.num_cards = np.sum(self.Cards)
@@ -1598,7 +1733,7 @@ room_name = args.room_name  # ディーラー名
 player = args.player  # プレイヤー名
 event_name = args.event_name  # Socket通信イベント名
 is_test_tool = TEST_TOOL_HOST_PORT in host  # 接続先が開発ガイドラインツールであるかを判定
-SPECIAL_LOGIC_TITLE = "◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯"  # スペシャルロジック名
+SPECIAL_LOGIC_TITLE = "モンテカルロ！"  # スペシャルロジック名
 TIME_DELAY = 10  # 処理停止時間
 
 

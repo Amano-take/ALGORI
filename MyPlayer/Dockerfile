@@ -10,4 +10,4 @@ EXPOSE 8081
 
 ENTRYPOINT [ "python", "RealPlayer.py"]
 
-CMD [ "http://host.docker.internal:8080/", "Dealer 1", "Player 1" ]
+CMD [ "http://localhost:8080/", "Dealer 1", "Player 1" ]

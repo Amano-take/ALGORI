@@ -3,3 +3,49 @@
 2023-12-17 18:04:44:959: [INFO] - Init commonService.
 2023-12-17 18:04:46:114: [INFO] - Create record of dealer sequnece.
 2023-12-17 18:04:46:124: [INFO] - Create record of player sequnece.
+2024-01-11 22:01:53:407: [INFO] - Start ALGORI system.
+2024-01-11 22:01:53:407: [INFO] - Init sequenceService.
+2024-01-11 22:01:53:409: [INFO] - Init commonService.
+2024-01-11 22:04:43:336: [INFO] - Create game. {"name":"D21","players":[],"status":"new","totalTurn":"1","whiteWild":"skip_bind_2","code":"D-00000021"}
+2024-01-11 22:04:43:401: [INFO] - Add new dealer.
+2024-01-11 22:04:56:401: [INFO] - Added a player to D-00000021. Player: Alternative 2.
+2024-01-11 22:05:00:672: [INFO] - Added a player to D-00000021. Player: Alternative 3.
+2024-01-11 22:05:03:089: [INFO] - Added a player to D-00000021. Player: Alternative 4.
+2024-01-11 22:05:05:434: [INFO] - Start game D-00000021.
+2024-01-11 22:05:38:263: [WARN] - (node:63) Warning: Accessing non-existent property 'count' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:63) Warning: Accessing non-existent property 'findOne' of module exports inside circular dependency
+(node:63) Warning: Accessing non-existent property 'remove' of module exports inside circular dependency
+(node:63) Warning: Accessing non-existent property 'updateOne' of module exports inside circular dependency
+
+2024-01-11 22:05:38:263: [WARN] - (node:75) Warning: Accessing non-existent property 'count' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:75) Warning: Accessing non-existent property 'findOne' of module exports inside circular dependency
+(node:75) Warning: Accessing non-existent property 'remove' of module exports inside circular dependency
+(node:75) Warning: Accessing non-existent property 'updateOne' of module exports inside circular dependency
+
+2024-01-11 22:05:38:271: [WARN] - (node:51) Warning: Accessing non-existent property 'count' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51) Warning: Accessing non-existent property 'findOne' of module exports inside circular dependency
+(node:51) Warning: Accessing non-existent property 'remove' of module exports inside circular dependency
+(node:51) Warning: Accessing non-existent property 'updateOne' of module exports inside circular dependency
+
+2024-01-11 22:10:51:972: [INFO] - Create game. {"name":"D22","players":[],"status":"new","totalTurn":"10","whiteWild":"skip_bind_2","code":"D-00000022"}
+2024-01-11 22:10:51:975: [INFO] - Add new dealer.
+2024-01-11 22:11:01:789: [INFO] - Added a player to D-00000022. Player: Alternative 1.
+2024-01-11 22:11:04:227: [INFO] - Added a player to D-00000022. Player: Alternative 2.
+2024-01-11 22:11:07:314: [INFO] - Added a player to D-00000022. Player: Alternative 4.
+2024-01-11 22:11:09:988: [INFO] - Start game D-00000022.
+2024-01-11 22:12:47:102: [INFO] - Create game. {"name":"D23","players":[],"status":"new","totalTurn":"10","whiteWild":"skip_bind_2","code":"D-00000023"}
+2024-01-11 22:12:47:105: [INFO] - Add new dealer.
+2024-01-11 22:14:21:215: [INFO] - Added a player to D-00000023. Player: Alternative 1.
+2024-01-11 22:14:28:178: [INFO] - Added a player to D-00000023. Player: Alternative 2.
+2024-01-11 22:14:28:372: [WARN] - (node:123) Warning: Accessing non-existent property 'count' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:123) Warning: Accessing non-existent property 'findOne' of module exports inside circular dependency
+(node:123) Warning: Accessing non-existent property 'remove' of module exports inside circular dependency
+(node:123) Warning: Accessing non-existent property 'updateOne' of module exports inside circular dependency
+
+2024-01-11 22:14:35:508: [INFO] - Added a player to D-00000023. Player: Alternative 3.
+2024-01-11 22:14:38:568: [INFO] - Added a player to D-00000023. Player: Alternative 4.
+2024-01-11 22:14:42:020: [INFO] - Start game D-00000023.

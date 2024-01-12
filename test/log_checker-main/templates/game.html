@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>log checker</title>
+    <link id="favicon" rel="icon" type="image/x-icon" href="{{ url_for('static', path='/favicon.ico') }}">
+    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js'></script>
+    <script>
+        $(function () {
+            var $header = $("#header");
+            var scrollSize = 300; //超えると表示
+            $(window).on("load scroll", function () {
+                var value = $(this).scrollTop();
+                if (value > scrollSize) {
+                    $header.addClass("scroll");
+                } else {
+                    $header.removeClass("scroll");
+                }
+            });
+        });
+    </script>
+</head>
+ 
+<body>
+    <header id="header">
+        <div class="header-yumekawa">
+            好きな対戦をえらんでね
+        </div>
+        <!-- <h1>好きな対戦をえらんでね</h1> -->
+        <div class="header-table">
+            <table class="game">
+                <tr>
+                    <th>対戦番号</th>
+                    {% for s in SOCKET_CONST %}
+                    <th>{{s}}</th>
+                    {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </header>
+    <div class="header-yumekawa">
+        好きな対戦をえらんでね
+    </div>
+    <!-- <h1>好きな対戦をえらんでね</h1> -->
+    <div>
+        <table class="game">
+            <tr>
+                <th>対戦番号</th>
+                {% for s in SOCKET_CONST %}
+                <th>{{s}}</th>
+                {% endfor %}
+            </tr>
+            {% for i in range(N) %}
+            {% set turn_num = i + 1 %}
+            <tr>
+                <td><a href="/{{dealer_name}}/{{loop.index}}">{{loop.index}}</a></td>
+                {% for s in SOCKET_CONST %}
+                <td>{% if s in turn_data[i] %}○{% endif %}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+
+</html>

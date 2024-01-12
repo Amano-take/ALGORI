@@ -121,7 +121,7 @@ export class DealerService {
    */
   public async deleteById(id: string): Promise<DealerModel> {
     await this.detailById(id);
-    return dealerRepository.deleteOne({ id });
+    return dealerRepository.deleteOne({ _id: id });
   }
 
   /**

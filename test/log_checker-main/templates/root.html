@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>log checker</title>
+    <link id="favicon" rel="icon" type="image/x-icon" href="{{ url_for('static', path='/favicon.ico') }}">
+    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+</head>
+ 
+<body>
+    <div class="header-yumekawa">
+        好きな試合ログをえらんでね
+    </div>
+    <div >
+        <table class="root">
+            <tr>
+                <th>試合ログ名</th>
+            </tr>
+            {% for f in files %}
+            <tr>
+                <td><a href="/{{ f[:-4]|e }}">{{ f[:-4]|e }}</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+        
+    </div>
+</body>
+
+</html>

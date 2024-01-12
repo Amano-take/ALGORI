@@ -3,6 +3,8 @@
  * @description define common app constants
  */
 
+import { Card, Color, Special } from './app.enum';
+
 export class AppConst {
   static readonly API_PREFIX: string = 'api'; // APIプレフィックス
   static readonly API_VERSION: string = 'v1'; // APIバージョン
@@ -46,6 +48,7 @@ export class AppConst {
   static readonly SPECIAL_CARD_PLAY_INVALID: string = 'Special card play invalid.';
   static readonly COLOR_CARD_PLAY_INVALID: string = 'Color card play invalid.';
   static readonly NUMBER_CARD_PLAY_INVALID: string = 'Number card play invalid.';
+  static readonly CARD_PLAY_INVALID: string = 'Card play invalid.';
   static readonly IS_PLAY_CARD_IS_REQUIED: string = 'Is play card is required.';
   static readonly PARAM_IS_PLAY_CARD_INVALID: string = 'Param is play card invalie.';
   static readonly YELL_UNO_IS_REQUIED: string = 'Yell uno is required.';
@@ -103,3 +106,61 @@ export class AppConst {
     white_wild: 40,
   };
 }
+export const CARDS: Card[] = [
+  { color: Color.RED, number: 0 },
+  { color: Color.RED, number: 1 },
+  { color: Color.RED, number: 2 },
+  { color: Color.RED, number: 3 },
+  { color: Color.RED, number: 4 },
+  { color: Color.RED, number: 5 },
+  { color: Color.RED, number: 6 },
+  { color: Color.RED, number: 7 },
+  { color: Color.RED, number: 8 },
+  { color: Color.RED, number: 9 },
+  { color: Color.RED, special: Special.SKIP },
+  { color: Color.RED, special: Special.REVERSE },
+  { color: Color.RED, special: Special.DRAW_2 },
+  { color: Color.YELLOW, number: 0 },
+  { color: Color.YELLOW, number: 1 },
+  { color: Color.YELLOW, number: 2 },
+  { color: Color.YELLOW, number: 3 },
+  { color: Color.YELLOW, number: 4 },
+  { color: Color.YELLOW, number: 5 },
+  { color: Color.YELLOW, number: 6 },
+  { color: Color.YELLOW, number: 7 },
+  { color: Color.YELLOW, number: 8 },
+  { color: Color.YELLOW, number: 9 },
+  { color: Color.YELLOW, special: Special.SKIP },
+  { color: Color.YELLOW, special: Special.REVERSE },
+  { color: Color.YELLOW, special: Special.DRAW_2 },
+  { color: Color.GREEN, number: 0 },
+  { color: Color.GREEN, number: 1 },
+  { color: Color.GREEN, number: 2 },
+  { color: Color.GREEN, number: 3 },
+  { color: Color.GREEN, number: 4 },
+  { color: Color.GREEN, number: 5 },
+  { color: Color.GREEN, number: 6 },
+  { color: Color.GREEN, number: 7 },
+  { color: Color.GREEN, number: 8 },
+  { color: Color.GREEN, number: 9 },
+  { color: Color.GREEN, special: Special.SKIP },
+  { color: Color.GREEN, special: Special.REVERSE },
+  { color: Color.GREEN, special: Special.DRAW_2 },
+  { color: Color.BLUE, number: 0 },
+  { color: Color.BLUE, number: 1 },
+  { color: Color.BLUE, number: 2 },
+  { color: Color.BLUE, number: 3 },
+  { color: Color.BLUE, number: 4 },
+  { color: Color.BLUE, number: 5 },
+  { color: Color.BLUE, number: 6 },
+  { color: Color.BLUE, number: 7 },
+  { color: Color.BLUE, number: 8 },
+  { color: Color.BLUE, number: 9 },
+  { color: Color.BLUE, special: Special.SKIP },
+  { color: Color.BLUE, special: Special.REVERSE },
+  { color: Color.BLUE, special: Special.DRAW_2 },
+  { color: Color.BLACK, special: Special.WILD_DRAW_4 },
+  { color: Color.BLACK, special: Special.WILD },
+  { color: Color.BLACK, special: Special.WILD_SHUFFLE },
+  { color: Color.WHITE, special: Special.WHITE_WILD },
+];

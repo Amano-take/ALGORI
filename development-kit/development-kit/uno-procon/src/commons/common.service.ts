@@ -1,11 +1,11 @@
-import { cloneDeep, isEqual, shuffle } from 'lodash';
+import { cloneDeep, find, isEqual, shuffle } from 'lodash';
 import * as BlueBird from 'bluebird';
 
 import { ActivityService } from '../api/activity/activity.service';
 import { DealerService } from '../api/dealer/dealer.service';
 import { DealerModel } from '../api/dealer/dealer.model';
 import { PlayerService } from '../api/player/player.service';
-import { AppConst } from './consts/app.const';
+import { AppConst, CARDS } from './consts/app.const';
 import { AppObject } from './consts/app.object';
 import { SocketConst } from './consts/socket.const';
 import {
@@ -751,7 +751,7 @@ export class CommonService {
 
           if (addDraw.drawCards.length) {
             // ゲームログの出力: draw-card
-            const dataCb = { player: timeoutPlayer, is_draw: false, can_play_draw_card: false };
+            const dataCb = { player: timeoutPlayer, is_draw: true };
             await activityService.create({
               dealer_code: desk.id,
               event: SocketConst.EMIT.DRAW_CARD,
@@ -759,7 +759,7 @@ export class CommonService {
               player: timeoutPlayer,
               turn: desk.turn,
               contents: {
-                can_play_draw_card: dataCb.can_play_draw_card,
+                can_play_draw_card: false,
                 card_draw: addDraw.drawCards,
                 is_draw: true,
                 draw_desk: {
@@ -1219,23 +1219,26 @@ export class CommonService {
    */
   public static hasValidateError(cardPlay: Card): BaseError | undefined {
     if (!cardPlay) {
-      // 出したのカードの情報がない場合
+      // 出したカードの情報がない場合
       return new BaseError({ message: AppConst.CARD_PLAY_IS_REQUIRED });
     } else if (!cardPlay.number && cardPlay.number !== 0 && !cardPlay.special) {
       // 出したカードのnumberのフィールドがない（0が検知されないように注意） かつ specialのフィールドもない
       return new BaseError({ message: AppConst.PARAM_CARD_PLAY_INVALID });
     } else if (cardPlay.special && ARR_SPECIAL.indexOf(cardPlay.special as Special) === -1) {
-      // specialフィールドの値が規定値ではない
+      // 出したカードのspecialのフィールドの値が規定値ではない
       return new BaseError({ message: AppConst.SPECIAL_CARD_PLAY_INVALID });
     } else if (cardPlay.color && ARR_COLOR.indexOf(cardPlay.color as Color) === -1) {
-      // colorフィールドの値が規定値ではない
+      // 出したカードのcolorのフィールドの値が規定値ではない
       return new BaseError({ message: AppConst.COLOR_CARD_PLAY_INVALID });
     } else if (
       (cardPlay.number || cardPlay.number === 0) &&
       ARR_NUMBER.indexOf(cardPlay.number) === -1
     ) {
-      // numberフィールドがあり0ではないが、規定の範囲内の数字ではない
+      // 出したカードのnumberのフィールドがあり0ではないが、規定の範囲内の数字ではない
       return new BaseError({ message: AppConst.NUMBER_CARD_PLAY_INVALID });
+    } else if (!find(CARDS, cardPlay)) {
+      // 出したカードが存在するカードであるか
+      return new BaseError({ message: AppConst.CARD_PLAY_INVALID });
     }
 
     return;

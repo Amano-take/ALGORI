@@ -1,5 +1,8 @@
 *.pyc
 *.prof
+*.zip
+*.log
+*.rdb
 /dev_kit/
 __pycache__/
 /uno/
