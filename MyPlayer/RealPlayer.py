@@ -1215,6 +1215,7 @@ class RPlayer:
     ):
         # assert next_player == self.myname
         start = time.time()
+        self.desk_color = rplayer.colors.index(card_before.get("color"))
         temp = 0
         while self.trash[-1] != Card._from_str(card_before):
             time.sleep(0.01)
@@ -1530,8 +1531,6 @@ class RPlayer:
     ):
         action = Card._from_str(card)
         self.trash.append(action)
-        if action in Master.card_shuffle:
-            time.sleep(0.1)
         self.force_draw = 0
 
         if playername != self.myname:
@@ -1569,12 +1568,14 @@ class RPlayer:
         if action not in Master.card_shuffle:
             self.desk_color = RPlayer.colors.index(color_of_wild)
         else:
-            self.desk_color = None
+            self.desk_color = 1
 
     def receive_play_draw_card(
-        self, playername, card: dict, yell_uno: bool, color_of_wild: str = None
+        self, playername, is_play_card, card: dict, yell_uno: bool, color_of_wild: str = None
     ):
-        self.receive_play_card(card, yell_uno, playername, color_of_wild)
+        if is_play_card:
+            self.receive_play_card(card, yell_uno, playername, color_of_wild)
+
 
     def receive_draw_card(self, playername: str):
         if playername == self.myname:
@@ -1646,7 +1647,7 @@ class RPlayer:
         )
         print(i, c)
         if i is None:
-            return None
+            return None, None, None
         if c is not None:
             c = RPlayer.colors[c]
         return i, c, self.num_cards == 2
@@ -2258,21 +2259,27 @@ def on_next_player(data_res):
                     return
                 else:
                     i, c, yell_uno = play_card
-                    play_card = Card._to_str(i)
+                    if i is None:
+                        data = {
+                            "is_play_card": False,
+                            "yell_uno": False
+                        }
+                    else:
+                        play_card = Card._to_str(i)
 
-                    # 以後、引いたカードが場に出せるときの処理
-                    data = {
-                        "is_play_card": True,
-                        "yell_uno": len(cards + res.get("draw_card"))
-                        == 2,  # 残り手札数を考慮してUNOコールを宣言する
-                    }
+                        # 以後、引いたカードが場に出せるときの処理
+                        data = {
+                            "is_play_card": True,
+                            "yell_uno": len(cards + res.get("draw_card"))
+                            == 2,  # 残り手札数を考慮してUNOコールを宣言する
+                        }
 
-                    play_card = res.get("draw_card")[0]
-                    if (
-                        play_card.get("special") == Special.WILD
-                        or play_card.get("special") == Special.WILD_DRAW_4
-                    ):
-                        data["color_of_wild"] = c
+                        play_card = res.get("draw_card")[0]
+                        if (
+                            play_card.get("special") == Special.WILD
+                            or play_card.get("special") == Special.WILD_DRAW_4
+                        ):
+                            data["color_of_wild"] = c
 
                 # 引いたカードを出すイベントを実行
                 send_event(SocketConst.EMIT.PLAY_DRAW_CARD, data)
@@ -2320,6 +2327,7 @@ def on_play_draw_card(data_res):
     def play_draw_card_callback(data_res):
         rplayer.receive_play_draw_card(
             data_res.get("player"),
+            data_res.get("is_play_card"),
             data_res.get("card_play"),
             data_res.get("yell_uno"),
             data_res.get("color_of_wild"),
