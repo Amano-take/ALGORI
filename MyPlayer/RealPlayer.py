@@ -1280,7 +1280,7 @@ class RPlayer:
             cand,
             self.turn_plus,
             self.players_rest,
-            4.3 - (time.time() - start),
+            4.5 - (time.time() - start),
             num_c_o_p,
         )
         yell_uno = self.num_cards == 2
@@ -1348,6 +1348,8 @@ class RPlayer:
                 )
                 self.Cards[card] += 1
                 self.num_cards += 1
+                if time.time() - start > rest_time:
+                    break
 
         print(action_score)
         return max(action_score, key=lambda x: action_score[x][1])
@@ -1581,7 +1583,7 @@ class RPlayer:
             self.players_pass_history[self.playername2_123[playername] - 1].append(
                 (self.trash[-1], self.desk_color)
             )
-            if len(self.players_pass_history[self.playername2_123[playername] - 1]) > 2:
+            if len(self.players_pass_history[self.playername2_123[playername] - 1]) > 3:
                 self.players_pass_history[self.playername2_123[playername] - 1].pop(0)
 
     def callback_draw_card(
