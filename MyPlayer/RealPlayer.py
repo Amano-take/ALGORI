@@ -281,12 +281,13 @@ class Master:
         self.player_rest = np.zeros(Master.player_num, dtype=np.int8)
         for i in range(Master.player_num):
             self.give_cards(i, 7)
-        self.show_all_players_cards()
-        self.logger.debug("start game")
+        # self.show_all_players_cards()
+        # self.logger.debug("start game")
         self.game_start()
 
     def game_start(self):
         show_flag = self.level <= logging.DEBUG
+        show_flag = False
         while not self.is_game_finished():
             # 手札を表示するかどうか
             if show_flag:
@@ -304,12 +305,12 @@ class Master:
             # パスを強制しrestを一つ減らす。
             else:
                 self.player_rest[self.turn] -= 1
-                self.logger.debug(
+                """self.logger.debug(
                     "player"
                     + str(self.turn)
                     + " is binded so skip this turn. reminer is "
                     + str(self.player_rest[self.turn])
-                )
+                )"""
                 action, color = -1, None
 
             # カードが出る場合
@@ -317,9 +318,9 @@ class Master:
                 self.deal_action_color(action, color, show_flag)
             # 出ない場合
             else:
-                self.logger.debug("player" + str(self.turn) + ": pass")
+                # self.logger.debug("player" + str(self.turn) + ": pass")
                 cs = self.give_cards(self.turn)
-                self.logger.debug("player" + str(self.turn) + "get " + str(Card(cs[0])))
+                # self.logger.debug("player" + str(self.turn) + "get " + str(Card(cs[0])))
                 action, color = self.give_turn_after_pass(
                     self.turn, self.desk, self.desk_color, cs
                 )
@@ -327,23 +328,15 @@ class Master:
                     self.deal_action_color(action, color, show_flag)
 
             self.next_turn()
-            self.logger.debug("-----")
+            # self.logger.debug("-----")
 
-        self.logger.debug("Winner is player" + str(self.winner()))
+        # self.logger.debug("Winner is player" + str(self.winner()))
         scores = self.calc_scores(self.winner())
-        self.logger.debug("final score is: " + str(scores))
+        # self.logger.debug("final score is: " + str(scores))
         return scores
 
     # numba化したいがselfを引数に取れないので、なかなか難しい
     def deal_action_color(self, action, color, show_flag=False):
-        self.logger.debug(
-            "player"
-            + str(self.turn)
-            + ": submit "
-            + str(Card(action))
-            + " to "
-            + str(Card(self.desk))
-        )
         self.desk = action
         # actionがワイルドカードでない場合
         if action <= 51:
@@ -359,18 +352,18 @@ class Master:
         if action in Master.card_plus_two:
             self.next_turn()
             self.give_cards(self.turn, 2)
-            self.logger.debug("player" + str(self.turn) + " get 2 cards")
+            # self.logger.debug("player" + str(self.turn) + " get 2 cards")
             # self.show_player_cards(self.turn)
         elif action in Master.card_skip:
             self.next_turn()
-            self.logger.debug("player" + str(self.turn) + " is skipped")
+            # self.logger.debug("player" + str(self.turn) + " is skipped")
         elif action in Master.card_reverse:
             self.reverse_turn()
-            self.logger.debug("turn reversed")
+            # self.logger.debug("turn reversed")
         elif action in Master.card_plus_four:
             self.next_turn()
             self.give_cards(self.turn, 4)
-            self.logger.debug("player" + str(self.turn) + " get 4 cards")
+            # self.logger.debug("player" + str(self.turn) + " get 4 cards")
             # self.show_player_cards(self.turn)
         elif action in Master.card_shuffle:
             self.shuffle()
@@ -379,13 +372,13 @@ class Master:
         elif action in Master.card_skipbind2:
             self.next_turn()
             self.player_rest[(self.turn + 1) % 4] += 2
-            self.logger.debug(
+            """self.logger.debug(
                 "player"
                 + str(self.turn)
                 + " is skipped and player"
                 + str((self.turn + 1) % 4)
                 + " is binded for 2"
-            )
+            )"""
         # 配ろうとしたのちにtrashに加える.
         self.trash.append(action)
 
@@ -1116,6 +1109,7 @@ class RPlayer:
         self.simmaster = Master(self.logger)
         self.inideck = self.simmaster.init_deck()
         self.uinideck, self.inideckcount = np.unique(self.inideck, return_counts=True)
+        self.scores = ddict(int)
         self.first_sim()
 
     def first_sim(self):
@@ -1165,6 +1159,10 @@ class RPlayer:
 
         # turn関連
         my_turn = play_order.index(self.myname)
+        for playername in play_order:
+            if playername not in self.scores:
+                self.scores[playername] = 0
+        print(self.scores)
         for i in range(1, 4):
             self.playername2_123[play_order[(my_turn + i) % 4]] = i
         print(self.playername2_123)
@@ -1217,7 +1215,7 @@ class RPlayer:
     ):
         # assert next_player == self.myname
         start = time.time()
-        tmp = 0
+        temp = 0
         while self.trash[-1] != Card._from_str(card_before):
             time.sleep(0.01)
             temp += 1
@@ -1282,7 +1280,7 @@ class RPlayer:
             cand,
             self.turn_plus,
             self.players_rest,
-            4.5 - (time.time() - start),
+            4.3 - (time.time() - start),
             num_c_o_p,
         )
         yell_uno = self.num_cards == 2
@@ -1306,7 +1304,7 @@ class RPlayer:
         if len(temp) > 0:
             self.trash = temp
         return
-    
+
     def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num):
         action_score = ddict(int)
         # cumsum = self.plpb.get_player_cumsum()
@@ -1362,22 +1360,25 @@ class RPlayer:
             # others, deck, trash = self.plpb.get_player_card(cumsum, rest)
             try:
                 other_player_cards, deck = self.random_likelihood2(
-                trash, other_player_cards_num[1:], self.players_pass_history
+                    trash, other_player_cards_num[1:], self.players_pass_history
                 )
-                scores += self.scores2score(
-                    self.simmaster.set_board(
-                        deck,
-                        turn_plus,
-                        self.Cards,
-                        other_player_cards,
-                        trash,
-                        card,
-                        color,
-                        0,
-                        player_rest,
+                scores += (
+                    self.scores2score(
+                        self.simmaster.set_board(
+                            deck,
+                            turn_plus,
+                            self.Cards,
+                            other_player_cards,
+                            trash,
+                            card,
+                            color,
+                            0,
+                            player_rest,
+                        )
                     )
                     / simulate_num
                 )
+
             except:
                 scores += 0
             # print("end", time.time() - start)
@@ -1461,7 +1462,17 @@ class RPlayer:
         return np.random.permutation(3)
 
     def scores2score(self, scores):
-        return scores[0] - np.average(scores[1:])
+        # return scores[0] - np.average(scores[1:])
+        af_scores = [0] * 4
+        for playername, score in self.scores.items():
+            af_scores[self.playername2_123[playername]] = (
+                score + scores[self.playername2_123[playername]]
+            )
+        grade = 1
+        for i in range(1, 4):
+            if af_scores[i] > af_scores[0]:
+                grade += 1
+        return scores[0] + (4 - grade) * 100
 
     @staticmethod
     @njit(cache=True)
@@ -1627,8 +1638,9 @@ class RPlayer:
     def receive_color_of_wild(self):
         # TODO: 色の決め方改善
         start = time.time()
-        cand = np.zeros(56, dtype=np.int8)
-        cand[53] = 1
+        # wait until self.Cards is updated
+        time.sleep(0.2)
+        cand = [53]
         self.Cards[53] += 1
         i, c = self.strategy(
             cand,
@@ -1667,6 +1679,8 @@ class RPlayer:
 
     def receive_finish_turn(self, scores):
         self.reset_my_cards()
+        for playername, score in scores.items():
+            self.scores[playername] += score
 
 
 """
@@ -1983,17 +1997,17 @@ Args:
 
 
 def send_event(event, data, callback=pass_func):
-    print("Send {} event.".format(event))
-    print("req_data: ", data)
+    # print("Send {} event.".format(event))
+    # print("req_data: ", data)
 
     def after_func(err, res):
         if err:
-            print("{} event failed!".format(event))
-            print(err)
+            # print("{} event failed!".format(event))
+            # print(err)
             return
 
-        print("Send {} event.".format(event))
-        print("res_data: ", res)
+        # print("Send {} event.".format(event))
+        # print("res_data: ", res)
         callback(res)
 
     sio.emit(event, data, callback=after_func)
@@ -2010,8 +2024,8 @@ Args:
 
 
 def receive_event(event, data, callback=pass_func):
-    print("Receive {} event.".format(event))
-    print("res_data: ", data)
+    # print("Receive {} event.".format(event))
+    # print("res_data: ", data)
 
     callback(data)
 
@@ -2311,7 +2325,7 @@ def on_pointed_not_say_uno(data_res):
 def on_finish_turn(data_res):
     def finish_turn__callback(data_res):
         global uno_declared
-        rplayer.receive_finish_turn(data_res.get("scores"))
+        rplayer.receive_finish_turn(data_res.get("score"))
         uno_declared = {}
 
     receive_event(SocketConst.EMIT.FINISH_TURN, data_res, finish_turn__callback)
