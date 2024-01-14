@@ -1307,7 +1307,7 @@ class RPlayer:
             self.trash = temp
         return
 
-    def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num):
+    def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num, cantpass = False):
         action_score = ddict(int)
         # cumsum = self.plpb.get_player_cumsum()
         # rest = self.plpb.get_rest(self.Cards)
@@ -1333,16 +1333,17 @@ class RPlayer:
                 )
             self.Cards[card] += 1
             self.num_cards += 1
-        action_score[(-1, None)] = (
-            1,
-            self.simulate(
-                turn_plus,
-                self.trash[-1],
-                self.desk_color,
-                player_rest,
-                other_player_cards_num,
-            ),
-        )
+        if not cantpass:
+            action_score[(-1, None)] = (
+                1,
+                self.simulate(
+                    turn_plus,
+                    self.trash[-1],
+                    self.desk_color,
+                    player_rest,
+                    other_player_cards_num,
+                ),
+            )
         if len(action_score) == 1:
             return max(action_score, key=lambda x: action_score[x][0])
 
@@ -1644,6 +1645,8 @@ class RPlayer:
             self.num_c_o_p,
         )
         print(i, c)
+        if i is None:
+            return None
         if c is not None:
             c = RPlayer.colors[c]
         return i, c, self.num_cards == 2
@@ -1680,6 +1683,7 @@ class RPlayer:
             self.players_rest,
             4.5 - (time.time() - start),
             self.num_c_o_p,
+            cantpass=True
         )
         self.Cards[53] -= 1
         return RPlayer.colors[c]
