@@ -1284,6 +1284,8 @@ class RPlayer:
             num_c_o_p,
         )
         yell_uno = self.num_cards == 2
+        if i is None:
+            return None
         if c is not None:
             c = RPlayer.colors[c]
         return i, c, yell_uno
@@ -1331,11 +1333,35 @@ class RPlayer:
                 )
             self.Cards[card] += 1
             self.num_cards += 1
+        action_score[(-1, None)] = (
+            1,
+            self.simulate(
+                turn_plus,
+                self.trash[-1],
+                self.desk_color,
+                player_rest,
+                other_player_cards_num,
+            ),
+        )
         if len(action_score) == 1:
             return max(action_score, key=lambda x: action_score[x][0])
 
         while time.time() - start < rest_time:
             for card, color in action_score.keys():
+                if card == -1:
+                    times, score = action_score[(-1, None)]
+                    new_score = self.simulate(
+                        turn_plus,
+                        self.trash[-1],
+                        self.desk_color,
+                        player_rest,
+                        other_player_cards_num,
+                    )
+                    action_score[(-1, None)] = (
+                        times + 1,
+                        score + (new_score - score) / (times + 1),
+                    )
+                    continue
                 self.Cards[card] -= 1
                 self.num_cards -= 1
                 times, score = action_score[(card, color)]
@@ -1352,7 +1378,11 @@ class RPlayer:
                     break
 
         print(action_score)
-        return max(action_score, key=lambda x: action_score[x][1])
+        i, c = max(action_score, key=lambda x: action_score[x][1])
+        if i == -1:
+            return None, None
+        else:
+            return i, c
 
     def simulate(self, turn_plus, card, color, player_rest, other_player_cards_num):
         scores = 0
