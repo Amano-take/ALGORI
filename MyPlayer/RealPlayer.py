@@ -1280,7 +1280,7 @@ class RPlayer:
             cand,
             self.turn_plus,
             self.players_rest,
-            4.3 - (time.time() - start),
+            4.5 - (time.time() - start),
             num_c_o_p,
         )
         yell_uno = self.num_cards == 2
