@@ -1348,6 +1348,8 @@ class RPlayer:
                 )
                 self.Cards[card] += 1
                 self.num_cards += 1
+                if time.time() - start > rest_time:
+                    break
 
         print(action_score)
         return max(action_score, key=lambda x: action_score[x][1])
