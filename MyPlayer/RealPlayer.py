@@ -1215,7 +1215,6 @@ class RPlayer:
     ):
         # assert next_player == self.myname
         start = time.time()
-        self.desk_color = rplayer.colors.index(card_before.get("color"))
         temp = 0
         while self.trash[-1] != Card._from_str(card_before):
             time.sleep(0.01)
@@ -1281,12 +1280,10 @@ class RPlayer:
             cand,
             self.turn_plus,
             self.players_rest,
-            4.5 - (time.time() - start),
+            4.3 - (time.time() - start),
             num_c_o_p,
         )
         yell_uno = self.num_cards == 2
-        if i is None:
-            return None
         if c is not None:
             c = RPlayer.colors[c]
         return i, c, yell_uno
@@ -1308,7 +1305,7 @@ class RPlayer:
             self.trash = temp
         return
 
-    def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num, cantpass = False):
+    def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num):
         action_score = ddict(int)
         # cumsum = self.plpb.get_player_cumsum()
         # rest = self.plpb.get_rest(self.Cards)
@@ -1334,36 +1331,11 @@ class RPlayer:
                 )
             self.Cards[card] += 1
             self.num_cards += 1
-        if not cantpass:
-            action_score[(-1, None)] = (
-                1,
-                self.simulate(
-                    turn_plus,
-                    self.trash[-1],
-                    self.desk_color,
-                    player_rest,
-                    other_player_cards_num,
-                ),
-            )
         if len(action_score) == 1:
             return max(action_score, key=lambda x: action_score[x][0])
 
         while time.time() - start < rest_time:
             for card, color in action_score.keys():
-                if card == -1:
-                    times, score = action_score[(-1, None)]
-                    new_score = self.simulate(
-                        turn_plus,
-                        self.trash[-1],
-                        self.desk_color,
-                        player_rest,
-                        other_player_cards_num,
-                    )
-                    action_score[(-1, None)] = (
-                        times + 1,
-                        score + (new_score - score) / (times + 1),
-                    )
-                    continue
                 self.Cards[card] -= 1
                 self.num_cards -= 1
                 times, score = action_score[(card, color)]
@@ -1376,15 +1348,9 @@ class RPlayer:
                 )
                 self.Cards[card] += 1
                 self.num_cards += 1
-                if time.time() - start > rest_time:
-                    break
 
         print(action_score)
-        i, c = max(action_score, key=lambda x: action_score[x][1])
-        if i == -1:
-            return None, None
-        else:
-            return i, c
+        return max(action_score, key=lambda x: action_score[x][1])
 
     def simulate(self, turn_plus, card, color, player_rest, other_player_cards_num):
         scores = 0
@@ -1531,6 +1497,8 @@ class RPlayer:
     ):
         action = Card._from_str(card)
         self.trash.append(action)
+        if action in Master.card_shuffle:
+            time.sleep(0.1)
         self.force_draw = 0
 
         if playername != self.myname:
@@ -1568,14 +1536,12 @@ class RPlayer:
         if action not in Master.card_shuffle:
             self.desk_color = RPlayer.colors.index(color_of_wild)
         else:
-            self.desk_color = 1
+            self.desk_color = None
 
     def receive_play_draw_card(
-        self, playername, is_play_card, card: dict, yell_uno: bool, color_of_wild: str = None
+        self, playername, card: dict, yell_uno: bool, color_of_wild: str = None
     ):
-        if is_play_card:
-            self.receive_play_card(card, yell_uno, playername, color_of_wild)
-
+        self.receive_play_card(card, yell_uno, playername, color_of_wild)
 
     def receive_draw_card(self, playername: str):
         if playername == self.myname:
@@ -1615,7 +1581,7 @@ class RPlayer:
             self.players_pass_history[self.playername2_123[playername] - 1].append(
                 (self.trash[-1], self.desk_color)
             )
-            if len(self.players_pass_history[self.playername2_123[playername] - 1]) > 3:
+            if len(self.players_pass_history[self.playername2_123[playername] - 1]) > 2:
                 self.players_pass_history[self.playername2_123[playername] - 1].pop(0)
 
     def callback_draw_card(
@@ -1646,8 +1612,6 @@ class RPlayer:
             self.num_c_o_p,
         )
         print(i, c)
-        if i is None:
-            return None, None, None
         if c is not None:
             c = RPlayer.colors[c]
         return i, c, self.num_cards == 2
@@ -1684,7 +1648,6 @@ class RPlayer:
             self.players_rest,
             4.5 - (time.time() - start),
             self.num_c_o_p,
-            cantpass=True
         )
         self.Cards[53] -= 1
         return RPlayer.colors[c]
@@ -2259,27 +2222,21 @@ def on_next_player(data_res):
                     return
                 else:
                     i, c, yell_uno = play_card
-                    if i is None:
-                        data = {
-                            "is_play_card": False,
-                            "yell_uno": False
-                        }
-                    else:
-                        play_card = Card._to_str(i)
+                    play_card = Card._to_str(i)
 
-                        # 以後、引いたカードが場に出せるときの処理
-                        data = {
-                            "is_play_card": True,
-                            "yell_uno": len(cards + res.get("draw_card"))
-                            == 2,  # 残り手札数を考慮してUNOコールを宣言する
-                        }
+                    # 以後、引いたカードが場に出せるときの処理
+                    data = {
+                        "is_play_card": True,
+                        "yell_uno": len(cards + res.get("draw_card"))
+                        == 2,  # 残り手札数を考慮してUNOコールを宣言する
+                    }
 
-                        play_card = res.get("draw_card")[0]
-                        if (
-                            play_card.get("special") == Special.WILD
-                            or play_card.get("special") == Special.WILD_DRAW_4
-                        ):
-                            data["color_of_wild"] = c
+                    play_card = res.get("draw_card")[0]
+                    if (
+                        play_card.get("special") == Special.WILD
+                        or play_card.get("special") == Special.WILD_DRAW_4
+                    ):
+                        data["color_of_wild"] = c
 
                 # 引いたカードを出すイベントを実行
                 send_event(SocketConst.EMIT.PLAY_DRAW_CARD, data)
@@ -2327,7 +2284,6 @@ def on_play_draw_card(data_res):
     def play_draw_card_callback(data_res):
         rplayer.receive_play_draw_card(
             data_res.get("player"),
-            data_res.get("is_play_card"),
             data_res.get("card_play"),
             data_res.get("yell_uno"),
             data_res.get("color_of_wild"),
