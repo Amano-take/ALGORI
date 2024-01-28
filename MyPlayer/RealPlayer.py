@@ -1149,6 +1149,7 @@ class RPlayer:
             return
         if card in Master.card_plus_two:
             self.force_draw = 2
+            self.desk_color = rplayer.colors.index(first_card.get("color"))
         elif card in Master.card_wild:
             self.desk_color = None
         else:
