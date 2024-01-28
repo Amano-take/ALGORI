@@ -1149,6 +1149,7 @@ class RPlayer:
             return
         if card in Master.card_plus_two:
             self.force_draw = 2
+            self.desk_color = rplayer.colors.index(first_card.get("color"))
         elif card in Master.card_wild:
             self.desk_color = None
         else:
@@ -1308,7 +1309,15 @@ class RPlayer:
             self.trash = temp
         return
 
-    def strategy(self, cand, turn_plus, player_rest, rest_time, other_player_cards_num, cantpass = False):
+    def strategy(
+        self,
+        cand,
+        turn_plus,
+        player_rest,
+        rest_time,
+        other_player_cards_num,
+        cantpass=False,
+    ):
         action_score = ddict(int)
         # cumsum = self.plpb.get_player_cumsum()
         # rest = self.plpb.get_rest(self.Cards)
@@ -1571,11 +1580,15 @@ class RPlayer:
             self.desk_color = 1
 
     def receive_play_draw_card(
-        self, playername, is_play_card, card: dict, yell_uno: bool, color_of_wild: str = None
+        self,
+        playername,
+        is_play_card,
+        card: dict,
+        yell_uno: bool,
+        color_of_wild: str = None,
     ):
         if is_play_card:
             self.receive_play_card(card, yell_uno, playername, color_of_wild)
-
 
     def receive_draw_card(self, playername: str):
         if playername == self.myname:
@@ -1684,7 +1697,7 @@ class RPlayer:
             self.players_rest,
             4.5 - (time.time() - start),
             self.num_c_o_p,
-            cantpass=True
+            cantpass=True,
         )
         self.Cards[53] -= 1
         return RPlayer.colors[c]
@@ -2260,10 +2273,7 @@ def on_next_player(data_res):
                 else:
                     i, c, yell_uno = play_card
                     if i is None:
-                        data = {
-                            "is_play_card": False,
-                            "yell_uno": False
-                        }
+                        data = {"is_play_card": False, "yell_uno": False}
                     else:
                         play_card = Card._to_str(i)
 
