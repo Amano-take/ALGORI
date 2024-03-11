@@ -1,5 +1,5 @@
 # 仕様書
-https://www.algori.ntt-east.co.jp/#/mainに参加したときの記録
+https://www.algori.ntt-east.co.jp/#/main　に参加したときの記録
 ## モジュール説明
 - GameModule
 ゲームの動作に関するモジュール群。
