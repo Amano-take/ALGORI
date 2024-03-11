@@ -1,5 +1,5 @@
 # 仕様書
-https://www.algori.ntt-east.co.jp/#/main　
+https://www.algori.ntt-east.co.jp/#/main
 に参加したときの記録
 ## モジュール説明
 - GameModule
